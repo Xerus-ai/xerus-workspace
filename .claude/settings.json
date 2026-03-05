@@ -27,7 +27,9 @@
     "SessionEnd": [".claude/hooks/scripts/session-end.sh"],
     "Stop": [".claude/hooks/scripts/stop.sh"],
     "SubagentStop": [".claude/hooks/scripts/subagent-stop.sh"],
-    "Notification": [".claude/hooks/scripts/notification.sh"]
+    "Notification": [".claude/hooks/scripts/notification.sh"],
+    "TeammateIdle": [".claude/hooks/scripts/teammate-idle.sh"],
+    "TaskCompleted": [".claude/hooks/scripts/task-completed.sh"]
   },
   "env": {
     "WORKSPACE_ROOT": "/home/daytona",
