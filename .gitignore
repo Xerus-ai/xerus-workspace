@@ -2,9 +2,9 @@
 .claude/settings.local.json
 
 # Runtime artifacts (generated inside sandbox, not in template)
-.system/.xerus/runner/agent-runner.js
-.system/.xerus/runner/platform-mcp-server.js
-.system/.memory/.git/
+.xerus/runner/agent-runner.js
+.xerus/runner/platform-mcp-server.js
+.memory/.git/
 
 # SQLite databases (created by scaffold, not in template)
 data/company.db

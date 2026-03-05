@@ -4,7 +4,7 @@
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
-MEMORY_DIR="$WORKSPACE_ROOT/.system/.memory/agents/$AGENT_SLUG"
+MEMORY_DIR="$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG"
 
 # Ensure working.md exists and has a compaction marker
 if [ -f "$MEMORY_DIR/working.md" ]; then

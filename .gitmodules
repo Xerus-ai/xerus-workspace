@@ -1,0 +1,6 @@
+[submodule "marketplace/agents"]
+	path = marketplace/agents
+	url = https://github.com/xerus-ai/xerus-agents.git
+[submodule "marketplace/skills"]
+	path = marketplace/skills
+	url = https://github.com/xerus-ai/xerus-skills.git

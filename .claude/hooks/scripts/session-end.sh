@@ -4,7 +4,7 @@
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
-MEMORY_ROOT="$WORKSPACE_ROOT/.system/.memory"
+MEMORY_ROOT="$WORKSPACE_ROOT/.memory"
 
 # Git commit memory changes
 cd "$MEMORY_ROOT" 2>/dev/null && {
