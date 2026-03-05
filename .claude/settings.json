@@ -1,0 +1,36 @@
+{
+  "model": "sonnet",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash",
+      "Agent",
+      "Skill",
+      "TaskCreate",
+      "TaskUpdate",
+      "TaskList",
+      "TaskGet",
+      "SendMessage",
+      "TeamCreate"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [".claude/hooks/scripts/session-start.sh"],
+    "UserPromptSubmit": [".claude/hooks/scripts/user-prompt-submit.sh"],
+    "PreToolUse": [".claude/hooks/scripts/pre-tool-use.sh"],
+    "PostToolUse": [".claude/hooks/scripts/post-tool-use.sh"],
+    "PreCompact": [".claude/hooks/scripts/pre-compact.sh"],
+    "SessionEnd": [".claude/hooks/scripts/session-end.sh"],
+    "Stop": [".claude/hooks/scripts/stop.sh"],
+    "SubagentStop": [".claude/hooks/scripts/subagent-stop.sh"],
+    "Notification": [".claude/hooks/scripts/notification.sh"]
+  },
+  "env": {
+    "WORKSPACE_ROOT": "/home/daytona",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}

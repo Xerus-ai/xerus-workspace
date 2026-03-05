@@ -1,0 +1,22 @@
+# SDK local settings (user-specific)
+.claude/settings.local.json
+
+# Runtime artifacts (generated inside sandbox, not in template)
+.system/.xerus/runner/agent-runner.js
+.system/.xerus/runner/platform-mcp-server.js
+.system/.memory/.git/
+
+# SQLite databases (created by scaffold, not in template)
+data/company.db
+data/*.db-journal
+
+# Scratch files (disposable between sessions)
+**/scratch/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+.npm/
