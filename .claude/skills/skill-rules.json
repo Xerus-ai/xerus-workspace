@@ -1,0 +1,68 @@
+{
+  "version": "1.0",
+  "skills": {
+    "skill-developer": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["create skill", "new skill", "skill template", "build skill"],
+        "intentPatterns": ["create.*skill", "build.*skill", "new.*skill"]
+      }
+    },
+    "skill-optimizer": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["optimize skill", "reduce tokens", "skill too large", "token budget"],
+        "intentPatterns": ["optimize.*skill", "reduce.*token", "skill.*large"]
+      }
+    },
+    "heal-skill": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["fix skill", "heal skill", "skill broken", "skill error", "wrong api"],
+        "intentPatterns": ["fix.*skill", "heal.*skill", "skill.*broken", "skill.*error"]
+      }
+    },
+    "xlsx": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["spreadsheet", "excel", "xlsx", "csv", "tsv", "formula"],
+        "intentPatterns": ["create.*spreadsheet", "edit.*excel", "analyze.*data"]
+      }
+    },
+    "pptx": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["presentation", "powerpoint", "pptx", "slides", "deck"],
+        "intentPatterns": ["create.*presentation", "build.*slides", "make.*deck"]
+      }
+    },
+    "docx": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["document", "word", "docx", "tracked changes", "redline"],
+        "intentPatterns": ["create.*document", "edit.*word", "write.*doc"]
+      }
+    },
+    "pdf": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["pdf", "merge pdf", "split pdf", "extract text", "fill form"],
+        "intentPatterns": ["merge.*pdf", "split.*pdf", "extract.*pdf", "fill.*form"]
+      }
+    }
+  }
+}
