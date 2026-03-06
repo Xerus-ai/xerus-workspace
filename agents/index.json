@@ -1,10 +1,9 @@
 {
-  "agents": [
-    {
-      "slug": "xerus-master",
+  "agents": {
+    "xerus-master": {
       "name": "Xerus",
       "role": "Master Orchestrator",
       "is_master": true
     }
-  ]
+  }
 }
