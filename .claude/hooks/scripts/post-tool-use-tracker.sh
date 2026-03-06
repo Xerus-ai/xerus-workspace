@@ -5,7 +5,8 @@
 # Event: PostToolUse
 # Matcher: Edit|Write
 
-TRACKER_FILE=".claude/tool-usage.log"
+WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
+TRACKER_FILE="$WORKSPACE_ROOT/.claude/tool-usage.log"
 
 # Append tool usage entry with timestamp
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
