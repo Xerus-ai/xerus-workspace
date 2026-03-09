@@ -16,6 +16,7 @@ data/*.db-journal
 # OS files
 .DS_Store
 Thumbs.db
+bash.exe.stackdump
 
 # Node
 node_modules/

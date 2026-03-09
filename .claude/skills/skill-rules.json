@@ -27,6 +27,32 @@
         "keywords": ["compress memory", "memory cleanup", "archive memory", "memory too large", "reduce memory"],
         "intentPatterns": ["compress.*memory", "cleanup.*memory", "archive.*memory", "reduce.*memory"]
       }
+    },
+    "sanitize-workspace": {
+      "type": "system",
+      "enforcement": "required",
+      "priority": "critical",
+      "promptTriggers": {
+        "keywords": ["sanitize workspace", "validate workspace", "restore workspace", "import workspace", "workspace integrity", "fix workspace", "workspace corrupted"],
+        "intentPatterns": ["sanitize.*workspace", "validate.*workspace", "restore.*backup", "import.*workspace", "fix.*workspace", "workspace.*integrity"]
+      },
+      "autoTriggers": {
+        "events": ["workspace_restore", "workspace_import", "template_upgrade"],
+        "description": "Auto-triggered by backend on S3 restore, user upload, or template version change"
+      }
+    },
+    "housekeeping": {
+      "type": "system",
+      "enforcement": "suggest",
+      "priority": "low",
+      "promptTriggers": {
+        "keywords": ["housekeeping", "clean workspace", "workspace cleanup", "check workspace", "workspace health", "tidy workspace"],
+        "intentPatterns": ["clean.*workspace", "workspace.*cleanup", "housekeeping", "workspace.*health", "tidy.*workspace"]
+      },
+      "autoTriggers": {
+        "events": ["session_end", "task_completed"],
+        "description": "Suggested by session-end hook after task completion"
+      }
     }
   }
 }

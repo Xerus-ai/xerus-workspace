@@ -14,7 +14,7 @@ Use Explore subagent for reading >5 files.
 
 ## Delegation
 
-You have SDK-native subagent types via the Task tool:
+You have SDK-native subagent types via the Agent tool:
 | Type | Purpose |
 |------|---------|
 | Explore | Read-only context gathering |
