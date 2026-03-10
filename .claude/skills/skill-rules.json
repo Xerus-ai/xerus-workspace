@@ -53,6 +53,37 @@
         "events": ["session_end", "task_completed"],
         "description": "Suggested by session-end hook after task completion"
       }
+    },
+    "channel-manager": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["standup", "channel standup", "weekly report", "team standup", "channel metrics", "OKR tracking"],
+        "intentPatterns": ["channel.*standup", "weekly.*report", "team.*update", "OKR.*track"]
+      }
+    },
+    "workspace-sync": {
+      "type": "system",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["sync agents", "update agent files", "refresh workspace", "agent drift", "sync workspace"],
+        "intentPatterns": ["sync.*agent", "update.*agent.*file", "refresh.*workspace", "workspace.*sync"]
+      },
+      "autoTriggers": {
+        "events": ["skill_change", "knowledge_change", "channel_change", "roster_change"],
+        "description": "Auto-triggered by workspace-sync-hook.sh on sync-relevant file changes"
+      }
+    },
+    "data-steward": {
+      "type": "domain",
+      "enforcement": "required",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["research", "data storage", "entity extraction", "company.db", "3-layer"],
+        "intentPatterns": ["store.*data", "extract.*entit", "log.*research", "data.*ecosystem"]
+      }
     }
   }
 }

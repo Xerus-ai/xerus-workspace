@@ -8,6 +8,9 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 # Ensure memory directory exists for this agent
 mkdir -p "$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG"
 
+# Initialize company.db if needed
+"$WORKSPACE_ROOT/.claude/hooks/scripts/init-db.sh"
+
 # Touch working.md if it doesn't exist
 if [ ! -f "$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG/working.md" ]; then
   echo "# Working Memory" > "$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG/working.md"

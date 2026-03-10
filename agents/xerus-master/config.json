@@ -39,5 +39,5 @@
     "platform.send_notification",
     "platform.complete_session"
   ],
-  "description": "Central orchestrator managing the workspace, delegating to specialists, and coordinating teams."
+  "description": "CEO of the workspace. Hires agents, builds teams, shapes org structure, drives outcomes, evolves the workspace."
 }
