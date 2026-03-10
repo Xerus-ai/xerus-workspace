@@ -1,0 +1,10 @@
+{
+  "slug": "xerus-cto",
+  "name": "CTO",
+  "role": "Technical Lead",
+  "model": "sonnet",
+  "autonomy_level": "autonomous",
+  "is_master": true,
+  "tools": [],
+  "description": "Technical lead. Pure Claude Code."
+}
