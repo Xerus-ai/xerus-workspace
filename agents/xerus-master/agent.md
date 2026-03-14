@@ -312,7 +312,7 @@ When uncertain whether to act or ask:
 Your workspace is a hierarchical file system modeling a company. You operate at the root.
 
 \`\`\`
-/home/daytona/
+$XERUS_WORKSPACE_ROOT/
 \u251C\u2500\u2500 CLAUDE.md                         # Root operating procedures (all agents read this)
 \u251C\u2500\u2500 .claude/
 \u2502   \u251C\u2500\u2500 settings.json                 # Workspace permissions and env vars

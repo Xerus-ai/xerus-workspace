@@ -3,12 +3,11 @@
 # Runs before SDK compacts context window
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
-MEMORY_DIR="$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
+MEMORY_DIR="$XERUS_WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"PreCompact\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "PreCompact"
 
 if [ -f "$MEMORY_DIR/working.md" ]; then
   # Keep only the most recent compaction marker to prevent unbounded growth
@@ -19,4 +18,4 @@ if [ -f "$MEMORY_DIR/working.md" ]; then
 fi
 
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-echo "{\"event\":\"pre_compact\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$TIMESTAMP\"}" >> "$WORKSPACE_ROOT/shared/activity.jsonl"
+echo "{\"event\":\"pre_compact\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$TIMESTAMP\"}" >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"

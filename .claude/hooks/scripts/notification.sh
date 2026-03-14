@@ -3,17 +3,16 @@
 # Runs when SDK sends a notification
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 NOTIFICATION="${CLAUDE_NOTIFICATION:-}"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"Notification\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "Notification"
 
 if [ -n "$NOTIFICATION" ]; then
   TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   FILENAME=$(date -u +%s)
-  INBOX_DIR="$WORKSPACE_ROOT/agents/$AGENT_SLUG/inbox"
+  INBOX_DIR="$XERUS_WORKSPACE_ROOT/agents/$AGENT_SLUG/inbox"
   mkdir -p "$INBOX_DIR"
 
   # Use jq if available for safe JSON encoding, fallback to printf escaping

@@ -149,11 +149,8 @@
     ]
   },
   "env": {
-    "WORKSPACE_ROOT": "/home/daytona",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "DISPLAY": ":99",
-    "AGENT_BROWSER_CDP_PORT": "9222",
-    "BROWSER_DATA_DIR": "/home/daytona/.browser/chromium-data",
-    "BROWSER_STATE_DIR": "/home/daytona/.browser/state"
+    "AGENT_BROWSER_CDP_PORT": "9222"
   }
 }

@@ -5,14 +5,13 @@
 # Event: PostToolUse
 # Matcher: Write|Edit
 
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
-QUEUE_FILE="$WORKSPACE_ROOT/.claude/sync-queue.jsonl"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
+QUEUE_FILE="$XERUS_WORKSPACE_ROOT/.claude/sync-queue.jsonl"
 TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"WorkspaceSyncHook\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "WorkspaceSyncHook"
 
 case "$TOOL_NAME" in
   Write|Edit)

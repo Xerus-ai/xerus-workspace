@@ -7,13 +7,12 @@
 # Matcher: (none - runs on all prompts)
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"SkillActivationPrompt\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "SkillActivationPrompt"
 
-RULES_FILE=".claude/skills/skill-rules.json"
+RULES_FILE="$XERUS_WORKSPACE_ROOT/.claude/skills/skill-rules.json"
 
 if [ ! -f "$RULES_FILE" ]; then
     exit 0

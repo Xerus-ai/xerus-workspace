@@ -8,11 +8,10 @@
 
 TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"PostToolUse\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "PostToolUse"
 
 # If tool was Write/Edit, trigger metadata sync for known paths
 case "$TOOL_NAME" in
@@ -31,10 +30,10 @@ case "$TOOL_NAME" in
       TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
       if command -v jq &>/dev/null; then
         jq -n --arg event "file_write" --arg path "$FILE_PATH" --arg agent "$AGENT_SLUG" --arg ts "$TIMESTAMP" \
-          '{event: $event, path: $path, agent: $agent, timestamp: $ts}' >> "$WORKSPACE_ROOT/shared/activity.jsonl"
+          '{event: $event, path: $path, agent: $agent, timestamp: $ts}' >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"
       else
         SAFE_PATH=$(printf '%s' "$FILE_PATH" | sed 's/\\/\\\\/g; s/"/\\"/g')
-        echo "{\"event\":\"file_write\",\"path\":\"$SAFE_PATH\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$TIMESTAMP\"}" >> "$WORKSPACE_ROOT/shared/activity.jsonl"
+        echo "{\"event\":\"file_write\",\"path\":\"$SAFE_PATH\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$TIMESTAMP\"}" >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"
       fi
     fi
     ;;

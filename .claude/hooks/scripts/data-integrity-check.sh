@@ -1,13 +1,12 @@
 #!/bin/bash
 # SessionEnd data integrity check — warns about orphaned scratch files
 # Non-blocking: logs warnings but never fails
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-DB_PATH="$WORKSPACE_ROOT/data/company.db"
+DB_PATH="$XERUS_WORKSPACE_ROOT/data/company.db"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"DataIntegrityCheck\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "DataIntegrityCheck"
 
 # Skip if no DB
 if [ ! -f "$DB_PATH" ] || [ ! -s "$DB_PATH" ]; then
@@ -15,7 +14,7 @@ if [ ! -f "$DB_PATH" ] || [ ! -s "$DB_PATH" ]; then
 fi
 
 # Check for scratch files that might contain unprocessed data
-SCRATCH_COUNT=$(find "$WORKSPACE_ROOT/scratch" -type f 2>/dev/null | wc -l)
+SCRATCH_COUNT=$(find "$XERUS_WORKSPACE_ROOT/scratch" -type f 2>/dev/null | wc -l)
 if [ "$SCRATCH_COUNT" -gt 0 ]; then
   echo "[data-integrity] Warning: $SCRATCH_COUNT file(s) in scratch/ — consider storing valuable data in company.db or .memory/entities/ before next session"
 fi

@@ -3,14 +3,13 @@
 # Runs before processing user prompt
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
+XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
-# Audit trail for shell hook observability
-mkdir -p "$WORKSPACE_ROOT/.xerus"
-echo "{\"hook\":\"UserPromptSubmit\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+source "$(dirname "$0")/_lib.sh"
+audit "UserPromptSubmit"
 
 # Check if agent is paused (HITL pause state)
-PAUSE_FILE="$WORKSPACE_ROOT/agents/$AGENT_SLUG/.paused"
+PAUSE_FILE="$XERUS_WORKSPACE_ROOT/agents/$AGENT_SLUG/.paused"
 if [ -f "$PAUSE_FILE" ]; then
   echo "Agent $AGENT_SLUG is paused. Resume via platform.resume_execution before continuing."
   exit 1

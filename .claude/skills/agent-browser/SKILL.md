@@ -96,8 +96,8 @@ agent-browser tab close           # Close tab
 ### Session State (persist logins)
 
 ```bash
-agent-browser state save /home/daytona/.browser/state/{service}.json
-agent-browser state load /home/daytona/.browser/state/{service}.json
+agent-browser state save $XERUS_WORKSPACE_ROOT/.browser/state/{service}.json
+agent-browser state load $XERUS_WORKSPACE_ROOT/.browser/state/{service}.json
 ```
 
 ### Cookies & Storage
@@ -183,13 +183,13 @@ Show completed work to the user via the browser pane:
 
 ```bash
 # HTML dashboard
-agent-browser open "file:///home/daytona/shared/dashboard/channel.html"
+agent-browser open "file://$XERUS_WORKSPACE_ROOT/shared/dashboard/channel.html"
 
 # Local web app (if agent built one on a preview port)
 agent-browser open "http://localhost:3000"
 
 # Any deliverable rendered as HTML
-agent-browser open "file:///home/daytona/projects/{project}/channels/{channel}/output/deliverables/{file}.html"
+agent-browser open "file://$XERUS_WORKSPACE_ROOT/projects/{project}/channels/{channel}/output/deliverables/{file}.html"
 ```
 
 The user sees this live in the browser pane on the frontend.
@@ -218,4 +218,4 @@ The user sees the browser pane auto-expand, solves the problem, and clicks Resum
 - Always snapshot after navigation to get new refs
 - Use `fill` instead of `type` for input fields to clear existing text
 - Use `--json` flag for machine-readable output
-- Browser state (cookies, localStorage) persists at `/home/daytona/.browser/chromium-data/`
+- Browser state (cookies, localStorage) persists at `$XERUS_WORKSPACE_ROOT/.browser/chromium-data/`

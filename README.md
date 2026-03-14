@@ -43,7 +43,7 @@ git clone --recursive https://github.com/xerus-ai/xerus-workspace.git
 
 ```
 1. Daytona creates sandbox
-2. git clone --recursive xerus-workspace into /home/daytona/
+2. git clone --recursive xerus-workspace into $XERUS_WORKSPACE_ROOT/
 3. Delete .git and marketplace/*/.git (workspace is not a persistent clone)
 4. Generate dynamic files (CLAUDE.md, agent configs, .mcp.json)
 5. Initialize .memory/.git (git-memory repo)
