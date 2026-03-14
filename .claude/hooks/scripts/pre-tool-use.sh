@@ -6,6 +6,10 @@ TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 
+# Audit trail for shell hook observability
+mkdir -p "$WORKSPACE_ROOT/.xerus"
+echo "{\"hook\":\"PreToolUse\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+
 # --- HITL Check 1: Agent pause state ---
 PAUSE_FILE="$WORKSPACE_ROOT/agents/$AGENT_SLUG/.paused"
 if [ -f "$PAUSE_FILE" ]; then

@@ -6,6 +6,10 @@ AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 MEMORY_DIR="$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG"
 
+# Audit trail for shell hook observability
+mkdir -p "$WORKSPACE_ROOT/.xerus"
+echo "{\"hook\":\"PreCompact\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+
 if [ -f "$MEMORY_DIR/working.md" ]; then
   # Keep only the most recent compaction marker to prevent unbounded growth
   # Remove old markers, then append the new one

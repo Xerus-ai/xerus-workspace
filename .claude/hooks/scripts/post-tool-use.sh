@@ -10,6 +10,10 @@ TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 
+# Audit trail for shell hook observability
+mkdir -p "$WORKSPACE_ROOT/.xerus"
+echo "{\"hook\":\"PostToolUse\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+
 # If tool was Write/Edit, trigger metadata sync for known paths
 case "$TOOL_NAME" in
   Write|Edit)

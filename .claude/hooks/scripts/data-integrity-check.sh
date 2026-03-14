@@ -5,6 +5,10 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 DB_PATH="$WORKSPACE_ROOT/data/company.db"
 
+# Audit trail for shell hook observability
+mkdir -p "$WORKSPACE_ROOT/.xerus"
+echo "{\"hook\":\"DataIntegrityCheck\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+
 # Skip if no DB
 if [ ! -f "$DB_PATH" ] || [ ! -s "$DB_PATH" ]; then
   exit 0

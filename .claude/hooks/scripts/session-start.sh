@@ -5,6 +5,10 @@
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 
+# Audit trail for shell hook observability
+mkdir -p "$WORKSPACE_ROOT/.xerus"
+echo "{\"hook\":\"SessionStart\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+
 # Ensure memory directory exists for this agent
 mkdir -p "$WORKSPACE_ROOT/.memory/agents/$AGENT_SLUG"
 

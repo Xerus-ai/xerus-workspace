@@ -19,20 +19,141 @@
     ]
   },
   "hooks": {
-    "SessionStart": [".claude/hooks/scripts/session-start.sh"],
-    "UserPromptSubmit": [".claude/hooks/scripts/user-prompt-submit.sh", ".claude/hooks/scripts/skill-activation-prompt.sh"],
-    "PreToolUse": [".claude/hooks/scripts/pre-tool-use.sh"],
-    "PostToolUse": [".claude/hooks/scripts/post-tool-use.sh", ".claude/hooks/scripts/post-tool-use-tracker.sh", ".claude/hooks/scripts/workspace-sync-hook.sh"],
-    "PreCompact": [".claude/hooks/scripts/pre-compact.sh"],
-    "SessionEnd": [".claude/hooks/scripts/session-end.sh", ".claude/hooks/scripts/data-integrity-check.sh"],
-    "Stop": [".claude/hooks/scripts/stop.sh"],
-    "SubagentStop": [".claude/hooks/scripts/subagent-stop.sh"],
-    "Notification": [".claude/hooks/scripts/notification.sh"],
-    "TeammateIdle": [".claude/hooks/scripts/teammate-idle.sh"],
-    "TaskCompleted": [".claude/hooks/scripts/task-completed.sh"]
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/user-prompt-submit.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/skill-activation-prompt.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/pre-tool-use.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/post-tool-use.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/post-tool-use-tracker.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/workspace-sync-hook.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/pre-compact.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/session-end.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/data-integrity-check.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/stop.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/subagent-stop.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/notification.sh"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/teammate-idle.sh"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/scripts/task-completed.sh"
+          }
+        ]
+      }
+    ]
   },
   "env": {
     "WORKSPACE_ROOT": "/home/daytona",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "DISPLAY": ":99",
+    "AGENT_BROWSER_CDP_PORT": "9222",
+    "BROWSER_DATA_DIR": "/home/daytona/.browser/chromium-data",
+    "BROWSER_STATE_DIR": "/home/daytona/.browser/state"
   }
 }

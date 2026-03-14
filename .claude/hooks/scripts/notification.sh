@@ -6,6 +6,10 @@ AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-/home/daytona}"
 NOTIFICATION="${CLAUDE_NOTIFICATION:-}"
 
+# Audit trail for shell hook observability
+mkdir -p "$WORKSPACE_ROOT/.xerus"
+echo "{\"hook\":\"Notification\",\"agent\":\"$AGENT_SLUG\",\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"ok\":true}" >> "$WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
+
 if [ -n "$NOTIFICATION" ]; then
   TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   FILENAME=$(date -u +%s)
