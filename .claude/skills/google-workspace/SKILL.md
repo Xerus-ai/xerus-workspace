@@ -173,11 +173,53 @@ FILE_ID=$(gws drive upload --parent "{CONTENT_FOLDER_ID}" --file "output/deliver
 # Create reference + register
 ```
 
-## Fallback (No gws CLI)
+## Browser-Native Workflows (Alternative to CLI)
 
-If `gws` is not available, skip Layer 1 operations and log to DB only. Add a note:
+When `gws` CLI is unavailable, or for interactive/visual work, use `agent-browser` to drive Google Workspace directly in the browser. See `.claude/skills/agent-browser/SKILL.md` for full reference.
+
+### Create Sheet via Browser
+
+```bash
+agent-browser tab new "https://sheets.google.com/create"
+agent-browser wait --load networkidle
+agent-browser snapshot -i
+# Use fill/click to add title, headers, data
+```
+
+### Create Doc via Browser
+
+```bash
+agent-browser tab new "https://docs.google.com/document/create"
+agent-browser wait --load networkidle
+agent-browser snapshot -i
+# Use type/fill to write content
+```
+
+### Create Slides via Browser
+
+```bash
+agent-browser tab new "https://slides.google.com/create"
+agent-browser wait --load networkidle
+agent-browser snapshot -i
+# Use click/type to build presentation
+```
+
+### When to Use CLI vs Browser
+
+| Use Case | Approach |
+|----------|----------|
+| Batch append 100+ rows | `gws` CLI (faster, no UI overhead) |
+| Create sheet with formatting | Browser (visual, interactive) |
+| Read data programmatically | `gws` CLI (structured JSON output) |
+| Create formatted doc/slides | Browser (Google Docs/Slides UI) |
+| Quick file upload | `gws` CLI |
+| Complex document editing | Browser |
+
+## Fallback (No gws CLI AND No Browser)
+
+If neither `gws` nor browser is available, skip Layer 1 operations and log to DB only. Add a note:
 ```sql
-INSERT INTO research_reports (..., sheet_url) VALUES (..., 'SKIPPED: gws not available');
+INSERT INTO research_reports (..., sheet_url) VALUES (..., 'SKIPPED: Google Workspace not available');
 ```
 
 Do NOT block on missing Google Workspace access. Layers 2 and 3 are always available.

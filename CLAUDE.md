@@ -30,7 +30,6 @@ agents/{your-slug}/BOOTSTRAP.md         First-session onboarding checklist
 .memory/                                Hierarchical memory (git-tracked)
 .claude/skills/                         Installed skills (auto-discovered)
 shared/knowledge/                       Company-wide documents (company.md = source of truth for vision/goals)
-shared/inbox/                           Cross-team message board
 shared/office/                          Shared workspace templates and resources
 shared/standup/                         Daily standup logs and summaries
 shared/activity.jsonl                   Execution log (who ran what, when)
@@ -88,11 +87,52 @@ Memory lives in `.memory/`. Read relevant files before starting work.
 
 ## Communication
 
-- **Same team**: @mention in channel posts or write to `agents/{slug}/inbox/`
-- **Cross team**: Write to `agents/{their-slug}/inbox/{timestamp}.json`
-- **Escalation**: Write to `agents/xerus-master/inbox/`
-- **Human**: Post clear question in channel with @human tag
-- **Updates**: Write to `output/posts.jsonl` with structured entries
+All communication goes through channel `output/posts.jsonl`. Each line is a JSON object:
+
+```json
+{"agent_slug":"your-slug","content":"Your message here","message_type":"post","metadata":{},"posted_at":"2026-03-07T10:30:00Z"}
+```
+
+### Message Types
+
+| Type | Use | Example |
+|------|-----|---------|
+| `post` | Standard update, deliverable announcement | `"message_type": "post"` |
+| `coordination` | Agent-to-agent message | `"message_type": "coordination"` + `"metadata": {"target_agent": "their-slug"}` |
+| `system` | Status change, completion event | `"message_type": "system"` |
+
+### Routing
+
+- **Same team**: Channel manager reads `output/posts.jsonl` and distributes via coordination messages with `target_agent`
+- **Cross team**: Write to the target channel's `output/posts.jsonl` with `message_type: "coordination"` and `metadata.target_agent` set to their channel manager (lead agent)
+- **Escalation**: Write to your channel's `output/posts.jsonl` with `message_type: "post"` and `metadata.requires_approval: true`
+- **Human**: Write to your channel's `output/posts.jsonl` with `@human` in content
+- **Updates**: Write to your channel's `output/posts.jsonl` with `message_type: "post"`
+
+### Coordination Message Contract
+
+`coordination` messages MUST include `target_agent` (string) or `target_agents` (string[]) in metadata. The backend channel-watcher delivers these directly to agent inboxes. `post` and `system` messages are for humans/frontend only and are not delivered to inboxes.
+
+### Examples
+
+Standard post:
+```json
+{"agent_slug":"thread-theo","content":"**Draft thread ready.** See output/deliverables/thread-ai-workforce.md","message_type":"post","metadata":{},"posted_at":"2026-03-07T10:30:00Z"}
+```
+
+Coordination (agent-to-agent):
+```json
+{"agent_slug":"curator-carla","content":"Can you generate 3 ideas from the AI coding trend?","message_type":"coordination","metadata":{"target_agent":"viral-vince"},"posted_at":"2026-03-07T11:00:00Z"}
+```
+
+Escalation (needs human approval):
+```json
+{"agent_slug":"ad-alex","content":"**Budget increase request.** Google CPC dropped 20%, recommend reallocating $50 from LinkedIn.","message_type":"post","metadata":{"requires_approval":true},"posted_at":"2026-03-07T12:00:00Z"}
+```
+
+### Reading Messages
+
+Check your channel's `output/posts.jsonl` for coordination messages where `metadata.target_agent` matches your slug. The backend also delivers @mentions to `agents/{your-slug}/inbox/` automatically — check on wake but do not write there yourself.
 
 ## Tool Usage
 
@@ -110,6 +150,53 @@ Call multiple tools in parallel when they are independent.
 
 Skills are installed at `.claude/skills/` and auto-discovered by the SDK. Use skill frameworks directly -- do not re-invent approaches your skills already cover.
 
+## Browser
+
+A shared Chromium browser runs on the workspace desktop. All agents can use it via the `agent-browser` CLI. The user can see the browser live in their frontend.
+
+### What the Browser Enables
+
+- **Google Workspace**: Create/edit Sheets, Docs, Slides directly in the browser
+- **Web automation**: Fill forms, navigate sites, extract data
+- **Previewing deliverables**: Open HTML dashboards, web apps, reports for user to see
+- **Authentication**: User logs into services once, agents inherit the session
+- **Human handoff**: Agent hits CAPTCHA/payment/2FA, user takes over in browser, agent resumes
+
+### Using the Browser
+
+```bash
+agent-browser tab new <url>       # Open a new tab (always use tab new, not open)
+agent-browser snapshot -i         # Get interactive elements
+agent-browser click @e1           # Click element
+agent-browser fill @e2 "text"     # Fill input
+agent-browser screenshot          # Capture screenshot
+agent-browser state save <path>   # Save session state
+```
+
+See `.claude/skills/agent-browser/SKILL.md` for full reference.
+
+### Browser-First Principle
+
+Prefer the browser over installing specialized tools:
+
+| Instead of | Use |
+|-----------|-----|
+| pandoc + docx-js for Word docs | Google Docs in browser |
+| pptxgenjs for presentations | Google Slides in browser |
+| xlsx packages for spreadsheets | Google Sheets in browser |
+| Custom HTML server for dashboards | Open HTML file in browser |
+
+The browser is already there. Use it.
+
+### Requesting Human Intervention
+
+When you encounter something requiring human action (CAPTCHA, payment, 2FA, login):
+
+1. Call `platform.pause_execution` with `checkpoint.ui_hint: "browser"`
+2. The frontend auto-expands the browser pane for the user
+3. User completes the action and clicks Resume
+4. Your session resumes from the checkpoint
+
 ## Output Conventions
 
 - Intermediate work: `scratch/` (disposable between sessions)
@@ -124,7 +211,7 @@ Skills are installed at `.claude/skills/` and auto-discovered by the SDK. Use sk
 
 | Layer | Storage | Purpose | Access |
 |-------|---------|---------|--------|
-| **1. Google Sheets/Drive** | Google Workspace | Raw data, human-readable, persistent | gws CLI |
+| **1. Google Sheets/Drive** | Google Workspace | Raw data, human-readable, persistent | gws CLI or agent-browser |
 | **2. company.db (SQLite)** | data/company.db | Structured, queryable, cross-agent | sqlite3 |
 | **3. .memory/entities/** | Git-tracked files | Rich context, backlinked knowledge graph | Read/Write |
 

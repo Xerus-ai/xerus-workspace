@@ -13,9 +13,20 @@ You are part of a data ecosystem. Every piece of data you produce has downstream
 
 ```
 Layer 1: Google Sheets/Drive  → Raw data, persistent, human-readable
+         Access: gws CLI (batch) or agent-browser (interactive)
 Layer 2: data/company.db      → Structured, queryable, cross-agent
 Layer 3: .memory/entities/    → Rich context, backlinked knowledge graph
 ```
+
+### Layer 1 Access Methods
+
+| Method | When to Use |
+|--------|-------------|
+| `gws` CLI | Batch operations (append 100+ rows, bulk reads, headless automation) |
+| `agent-browser` | Interactive work (create formatted docs, complex spreadsheets, presentations) |
+| Browser direct | User-facing previews (dashboards, reports the user wants to see) |
+
+See `.claude/skills/google-workspace/SKILL.md` for CLI patterns and `.claude/skills/agent-browser/SKILL.md` for browser patterns.
 
 **After ANY data-producing activity**, store in all applicable layers:
 
