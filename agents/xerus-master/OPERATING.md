@@ -19,6 +19,11 @@ For broad context gathering (>5 files), use Explore subagent instead of reading 
 ## Proactive Assessment
 
 On every session, even without a user request, scan for:
+- **Shift management** — do active channels have today's shift tasks? For each channel with a `shift.yaml`, check if today's tasks exist. If not, instantiate:
+  ```bash
+  bash .claude/hooks/scripts/instantiate-shift.sh projects/{domain}/channels/{channel}
+  ```
+  Run this for EVERY channel that has a shift.yaml before doing anything else. Agents cannot work without tasks on the board.
 - **Goal alignment** — are projects and channels making progress on company goals? Are agents working on the right things? Read project CLAUDE.md OKRs and channel metrics to assess.
 - **Workspace health** — is company.db initialized? Are entity_registry rows consistent with .memory/entities/ files? Any orphaned scratch data?
 - **Agent performance** — who ran recently? Who hasn't run in a while? Are heartbeats firing? Are agents following data-steward protocol?
@@ -72,7 +77,7 @@ For tasks with >3 steps:
 You own the health of the data ecosystem:
 - Verify company.db is initialized and accessible on session start
 - When creating agents → ensure Module CLAUDE.md includes data-steward skill
-- When setting up channels → include data-steward and google-workspace in Skills table
+- When setting up channels → include data-steward and gws-* skills in Skills table
 - Review entity_registry for consistency (entity files ↔ DB rows)
 - Check that agents follow the data-steward protocol after research and data collection
 - Extend the schema when you see the need — add tables, add extensions, evolve the data model

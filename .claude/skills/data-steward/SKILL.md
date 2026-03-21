@@ -26,7 +26,7 @@ Layer 3: .memory/entities/    → Rich context, backlinked knowledge graph
 | `agent-browser` | Interactive work (create formatted docs, complex spreadsheets, presentations) |
 | Browser direct | User-facing previews (dashboards, reports the user wants to see) |
 
-See `.claude/skills/google-workspace/SKILL.md` for CLI patterns and `.claude/skills/agent-browser/SKILL.md` for browser patterns.
+See `.claude/skills/gws-shared/SKILL.md` for CLI auth and flags, `gws-sheets/`, `gws-drive/`, `gws-docs/` for service-specific patterns, and `.claude/skills/agent-browser/SKILL.md` for browser patterns.
 
 **After ANY data-producing activity**, store in all applicable layers:
 

@@ -35,10 +35,6 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/scripts/user-prompt-submit.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/scripts/skill-activation-prompt.sh"
           }
         ]
       }

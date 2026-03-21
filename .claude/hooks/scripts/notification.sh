@@ -11,7 +11,7 @@ audit "Notification"
 
 if [ -n "$NOTIFICATION" ]; then
   TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  FILENAME=$(date -u +%s)
+  FILENAME=$(date -u +%s%N 2>/dev/null || date -u +%s)-$$
   INBOX_DIR="$XERUS_WORKSPACE_ROOT/agents/$AGENT_SLUG/inbox"
   mkdir -p "$INBOX_DIR"
 

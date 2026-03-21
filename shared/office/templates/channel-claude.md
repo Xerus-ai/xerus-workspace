@@ -24,7 +24,10 @@
 | Skill | Path | Use For |
 |-------|------|---------|
 | data-steward | .claude/skills/data-steward/SKILL.md | 3-layer data storage, entity extraction, downstream notification |
-| google-workspace | .claude/skills/google-workspace/SKILL.md | Google Sheets/Drive for raw data persistence |
+| gws-shared | .claude/skills/gws-shared/SKILL.md | Google Workspace CLI auth, flags, security rules |
+| gws-sheets | .claude/skills/gws-sheets/SKILL.md | Google Sheets API operations |
+| gws-drive | .claude/skills/gws-drive/SKILL.md | Google Drive file and folder management |
+| gws-docs | .claude/skills/gws-docs/SKILL.md | Google Docs read/write |
 | channel-manager | .claude/skills/channel-manager/SKILL.md | Standup, task distribution, cross-channel coordination |
 
 ## Cross-Channel

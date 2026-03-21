@@ -1,6 +1,5 @@
 #!/bin/bash
-# SubagentStop hook: Subagent cleanup, merge results
-# Runs when a spawned subagent finishes
+# SubagentStop hook: Log subagent completion, save any partial state
 
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
@@ -8,4 +7,8 @@ XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 source "$(dirname "$0")/_lib.sh"
 audit "SubagentStop"
 
-echo "{\"event\":\"subagent_stop\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"
+# Save progress (subagent may have been working on a subtask)
+SCRIPT_DIR="$(dirname "$0")"
+$PYTHON "$SCRIPT_DIR/save-progress.py" "$AGENT_SLUG" "$XERUS_WORKSPACE_ROOT" 2>&1 || true
+
+log_activity "subagent_stop" "$AGENT_SLUG"

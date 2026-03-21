@@ -39,17 +39,17 @@ marketplace/                            Read-only skill/agent catalog
 
 ## Standard Operating Procedures
 
-1. **On wake**: Read HEARTBEAT.md for self-prompted tasks
-   - Read `shared/activity.jsonl` for recent execution history
-2. **Before starting work**: Gather context first
-   - Read `shared/knowledge/company.md` (company vision, current goals — your north star)
-   - Read your project's CLAUDE.md (project OKRs — what your department is trying to achieve)
-   - Read your channel's CLAUDE.md (channel goals, metrics targets — your team's mission)
+1. **On wake**: Read your task context FIRST
+   - Read `.memory/agents/{your-slug}/.task-context.md` — this is your assignment
+   - If status is **BLOCKED**: output the blocked message and end session immediately
+   - If status is **READY**: do exactly what the Current Task says, nothing else
+   - If status is **IDLE** or **NO TASKS**: check BOOTSTRAP.md → if `completed_at: null`, execute the bootstrap checklist. Otherwise proceed to step 2.
+2. **Before starting work**: Gather context
+   - Read `.memory/agents/{your-slug}/.session-context` (matched skills, inbox, previous session)
+   - Read HEARTBEAT.md for self-prompted tasks
+   - Read `shared/knowledge/company.md` (company vision, current goals)
+   - Read your channel's CLAUDE.md (channel goals, metrics, team)
    - Read `.memory/agents/{your-slug}/working.md` (your recent work)
-   - Read `.memory/agents/{your-slug}/expertise.md` (your learned capabilities)
-   - Read `.memory/user/preferences.md` (user communication style)
-   - Read `.memory/projects/{your-project}/context.md` (team state)
-   - Read `.beads/issues.jsonl` (task board -- what is assigned to you)
 3. **For complex work**: Plan first, create beads tasks, then execute
 4. **Always use beads**: `bd create` for new tasks, `bd close` when done
 5. **Post updates**: Write to `output/posts.jsonl` in your channel
@@ -152,50 +152,7 @@ Skills are installed at `.claude/skills/` and auto-discovered by the SDK. Use sk
 
 ## Browser
 
-A shared Chromium browser runs on the workspace desktop. All agents can use it via the `agent-browser` CLI. The user can see the browser live in their frontend.
-
-### What the Browser Enables
-
-- **Google Workspace**: Create/edit Sheets, Docs, Slides directly in the browser
-- **Web automation**: Fill forms, navigate sites, extract data
-- **Previewing deliverables**: Open HTML dashboards, web apps, reports for user to see
-- **Authentication**: User logs into services once, agents inherit the session
-- **Human handoff**: Agent hits CAPTCHA/payment/2FA, user takes over in browser, agent resumes
-
-### Using the Browser
-
-```bash
-agent-browser tab new <url>       # Open a new tab (always use tab new, not open)
-agent-browser snapshot -i         # Get interactive elements
-agent-browser click @e1           # Click element
-agent-browser fill @e2 "text"     # Fill input
-agent-browser screenshot          # Capture screenshot
-agent-browser state save <path>   # Save session state
-```
-
-See `.claude/skills/agent-browser/SKILL.md` for full reference.
-
-### Browser-First Principle
-
-Prefer the browser over installing specialized tools:
-
-| Instead of | Use |
-|-----------|-----|
-| pandoc + docx-js for Word docs | Google Docs in browser |
-| pptxgenjs for presentations | Google Slides in browser |
-| xlsx packages for spreadsheets | Google Sheets in browser |
-| Custom HTML server for dashboards | Open HTML file in browser |
-
-The browser is already there. Use it.
-
-### Requesting Human Intervention
-
-When you encounter something requiring human action (CAPTCHA, payment, 2FA, login):
-
-1. Call `platform.pause_execution` with `checkpoint.ui_hint: "browser"`
-2. The frontend auto-expands the browser pane for the user
-3. User completes the action and clicks Resume
-4. Your session resumes from the checkpoint
+A shared Chromium browser is available via the `agent-browser` skill. Use it for Google Workspace, web automation, and previews. See `.claude/skills/agent-browser/SKILL.md` for commands and usage. Prefer the browser over installing packages (use Google Docs instead of pandoc, Google Sheets instead of xlsx).
 
 ## Output Conventions
 
@@ -207,71 +164,12 @@ When you encounter something requiring human action (CAPTCHA, payment, 2FA, logi
 
 ## Data Architecture
 
-### 3-Layer Storage Model
+Three-layer storage model. All agents follow the `data-steward` skill protocol.
 
-| Layer | Storage | Purpose | Access |
-|-------|---------|---------|--------|
-| **1. Google Sheets/Drive** | Google Workspace | Raw data, human-readable, persistent | gws CLI or agent-browser |
-| **2. company.db (SQLite)** | data/company.db | Structured, queryable, cross-agent | sqlite3 |
-| **3. .memory/entities/** | Git-tracked files | Rich context, backlinked knowledge graph | Read/Write |
+| Layer | Storage | Purpose |
+|-------|---------|---------|
+| **1. Google Sheets/Drive** | Google Workspace | Raw data, human-readable |
+| **2. company.db (SQLite)** | `data/company.db` | Structured, queryable, cross-agent |
+| **3. .memory/entities/** | Git-tracked files | Rich context, backlinked knowledge graph |
 
-### company.db Tables (Core)
-
-| Table | Purpose |
-|-------|---------|
-| `research_reports` | Every research run (topic, source_skill, key_findings, sheet_url) |
-| `prospects` | Companies/people discovered (type, status, relevance_score, source_agent) |
-| `competitors` | Competitor profiles (features, pricing, strengths, weaknesses) |
-| `topics` | Tracked topics (relevance_score, trend_direction, research_count) |
-| `metrics` | Time-series metrics — any scope (scope, metric_name, value, period) |
-| `google_files` | Registry of Google Sheets/Drive files |
-| `entity_registry` | Master index linking .memory/entities/ paths to DB rows |
-
-Domain extensions add more tables (e.g., `content_ideas`, `experiments` for marketing; `tickets`, `sprints` for dev). See `data/extensions/`. Run `sqlite3 data/company.db ".tables"` to discover all available tables.
-
-Schema: `data/schema.sql` (core) + `data/extensions/*.sql` (domain). Auto-initialized by session-start hook.
-
-### Quick Reference SQL
-
-```sql
--- Log research
-INSERT INTO research_reports (topic, source_skill, source_agent, key_findings, summary)
-VALUES ('{topic}', '{skill}', '{your-slug}', '{JSON}', '{summary}');
-
--- Log metrics (scope = channel, project, agent, or "company-wide")
-INSERT OR REPLACE INTO metrics (scope, metric_name, value, period, source_agent)
-VALUES ('{scope}', '{metric}', {value}, '{YYYY-MM-DD}', '{your-slug}');
-
--- Recent research
-SELECT topic, source_skill, summary FROM research_reports ORDER BY created_at DESC LIMIT 5;
-
--- Discover all tables (including domain extensions)
--- sqlite3 data/company.db ".tables"
-```
-
-### Entity Files
-
-Entities live in `.memory/entities/` with subdirectories:
-- `companies/{slug}.md` — Company profiles
-- `people/{slug}.md` — People profiles
-- `topics/{slug}.md` — Tracked topics and trends
-- `products/{slug}.md` — Product profiles
-
-Templates: `.memory/entities/TEMPLATES.md`
-
-Every entity file MUST have a corresponding row in `entity_registry` table.
-
-### Drive References
-
-Google files get local references at `data/drive/{name}-{YYYY-MM-DD}.gsheet` (JSON format) plus a row in the `google_files` table.
-
-### Data Flow Protocol
-
-After ANY data-producing activity:
-1. Store structured data in company.db (Layer 2)
-2. Create/update entity files in .memory/entities/ (Layer 3)
-3. Push raw data to Google Sheets if available (Layer 1)
-4. Register entities in entity_registry table
-5. Notify downstream agents via coordination messages
-
-See `.claude/skills/data-steward/SKILL.md` for the complete protocol.
+After ANY data-producing activity: persist to company.db, create entity files, notify downstream agents. See `.claude/skills/data-steward/SKILL.md` for tables, SQL, entity templates, and the full protocol.

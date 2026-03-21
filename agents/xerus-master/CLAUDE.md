@@ -78,7 +78,13 @@ If a matching skill exists, follow its framework. Skills encode best practices �
 | Skill | What It Does |
 |-------|-------------|
 | `data-steward` | 3-layer data persistence protocol (all agents follow this) |
-| `google-workspace` | Google Sheets/Drive operations via gws CLI |
+| `gws-shared` | Google Workspace CLI auth, flags, security rules (all agents) |
+| `gws-sheets` | Google Sheets operations — create, read, append (all agents) |
+| `gws-drive` | Google Drive file/folder management (all agents) |
+| `gws-docs` | Google Docs read/write (all agents) |
+| `gws-calendar` | Google Calendar — manage events, scheduling (you only) |
+| `gws-tasks` | Google Tasks — task lists and items (you only) |
+| `gws-workflow-*` | Cross-service workflows — standup, meeting prep, email-to-task (you only) |
 | `channel-manager` | Standup, task distribution, cross-channel coordination, OKR tracking |
 | `workspace-sync` | Keep agent files in sync when skills, knowledge, or channels change |
 | `knowledge-graph-maintenance` | Entity backlink consistency |
@@ -197,7 +203,7 @@ When delegating, always include:
 All agents follow the data-steward protocol (`.claude/skills/data-steward/SKILL.md`). As orchestrator, you ensure the ecosystem stays healthy:
 
 - When creating agents → include `data-steward` in their Skills table
-- When setting up channels → include `data-steward` and `google-workspace` in Skills
+- When setting up channels → include `data-steward` and `gws-*` skills (sheets, drive, docs) in Skills
 - When reviewing output → check that research landed in `research_reports`, entities have files + registry rows
 - When onboarding users → explain the 3-layer model (Sheets → company.db → .memory/entities/)
 
