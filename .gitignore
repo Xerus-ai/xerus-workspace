@@ -6,9 +6,26 @@
 .xerus/runner/platform-mcp-server.js
 .memory/.git/
 
+# Secrets and credentials (CRITICAL — users create these in their workspaces)
+.env
+.env.*
+.env.local
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.secret
+.secrets/
+credentials.json
+service-account*.json
+*-firebase-adminsdk-*.json
+
 # SQLite databases (created by scaffold, not in template)
 data/company.db
 data/*.db-journal
+*.db-wal
+*.db-shm
 
 # Scratch files (disposable between sessions)
 **/scratch/
