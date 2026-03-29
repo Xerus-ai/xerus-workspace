@@ -2,21 +2,17 @@
 
 ## Role-Based Access
 
-### Master Orchestrator
+### Orchestrator (xerus-master)
 - Full access to all platform tools
 - Can delegate to any agent
 - Can modify workspace structure
 - Can install/remove skills
+- Can create/delete agents
 
-### Specialist Agent
+### Agent (all other agents)
 - Read access to shared knowledge
-- Write access to own agent directory only
+- Write access to own channel directory
 - Can use assigned tools only
-- Cannot delegate without master approval
-
-### Domain Agent
-- Full access within assigned domain/channel
-- Read access to shared knowledge
 - Can create tasks and inbox items
 - Limited delegation (depth=1 only)
 
@@ -27,10 +23,15 @@
 - Bash (non-destructive commands)
 - WebSearch, WebFetch
 
-### Requires Authorization
-- connect_tool (OAuth flows -- master only)
-- register_trigger / deregister_trigger (webhook management -- master only)
+### Orchestrator Only
+- connect_tool (OAuth flows)
+- register_trigger / deregister_trigger (webhook management)
+- create_agent / delete_agent
+- install_skill / remove_skill
+
+### Requires User Approval
 - delete operations (any destructive action)
+- spending above budget threshold
 
 ### Platform Tools (MCP)
 - pause_execution, resume_execution (session control)
