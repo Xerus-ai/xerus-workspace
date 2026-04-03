@@ -38,3 +38,4 @@ bash.exe.stackdump
 # Node
 node_modules/
 .npm/
+.xerus/ipc/__pycache__/

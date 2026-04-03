@@ -16,6 +16,7 @@ import threading
 import time
 import sqlite3
 import hashlib
+import hmac
 import secrets
 from pathlib import Path
 
@@ -85,6 +86,11 @@ class MessageBroker:
         self.instance_sessions: Dict[str, str] = {}  # instance_id -> session_token
         # Rate limiting
         self.rate_limiter = RateLimiter(max_requests=100, window_seconds=60)
+
+        # Background cleanup scheduling
+        self._cleanup_interval = 60  # seconds
+        self._last_cleanup = time.time()
+        self._cleanup_timer: Optional[threading.Timer] = None
 
         # SQLite persistence - Xerus workspace path
         self.db_dir = os.path.expanduser("~/.xerus/ipc")
@@ -174,14 +180,10 @@ class MessageBroker:
             logger.info(f"SQLite database initialized at {self.db_path}")
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
-            # Fall back to in-memory only if DB fails
-            self.db_path = None
+            raise
 
     def _init_connection_pool(self):
         """Initialize the SQLite connection pool"""
-        if not self.db_path:
-            return
-
         with self._pool_lock:
             for _ in range(self._pool_size):
                 try:
@@ -229,9 +231,6 @@ class MessageBroker:
 
     def _load_from_database(self):
         """Load existing messages and instances from database"""
-        if not self.db_path:
-            return
-
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -307,9 +306,6 @@ class MessageBroker:
 
     def _save_message_to_db(self, from_id: str, to_id: str, msg_data: Dict[str, Any]):
         """Save message to SQLite database"""
-        if not self.db_path:
-            return
-
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -348,7 +344,7 @@ class MessageBroker:
 
     def _mark_messages_as_read(self, instance_id: str, message_ids: List[int]):
         """Mark messages as read in the database"""
-        if not self.db_path or not message_ids:
+        if not message_ids:
             return
 
         try:
@@ -369,9 +365,6 @@ class MessageBroker:
 
     def _save_instance_to_db(self, instance_id: str):
         """Save or update instance in database"""
-        if not self.db_path:
-            return
-
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -383,15 +376,11 @@ class MessageBroker:
 
             conn.commit()
             self._return_connection(conn)
-            conn.close()
         except Exception as e:
             logger.error(f"Failed to save instance to database: {e}")
 
     def _save_session_to_db(self, session_token: str, instance_id: str):
         """Save session to database"""
-        if not self.db_path:
-            return
-
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -430,14 +419,41 @@ class MessageBroker:
             salt = "xerus-ipc-mcp-v1-dev"  # Dev-only fallback
         return hashlib.sha256(f"{salt}:{token}".encode()).hexdigest()
 
+    def _run_periodic_cleanup(self):
+        """Run expired forwards/messages cleanup on a background timer."""
+        if not self.running:
+            return
+        try:
+            with self.lock:
+                self._clean_expired_forwards()
+                self._clean_expired_messages()
+                self._last_cleanup = time.time()
+            logger.debug("Periodic cleanup completed")
+        except Exception as e:
+            logger.error(f"Periodic cleanup error: {e}")
+        finally:
+            # Schedule next cleanup if still running
+            if self.running:
+                self._cleanup_timer = threading.Timer(self._cleanup_interval, self._run_periodic_cleanup)
+                self._cleanup_timer.daemon = True
+                self._cleanup_timer.start()
+
     def start(self):
         """Start the message broker server"""
         self.running = True
         threading.Thread(target=self._run_server, daemon=True).start()
+        # Start periodic cleanup timer
+        self._cleanup_timer = threading.Timer(self._cleanup_interval, self._run_periodic_cleanup)
+        self._cleanup_timer.daemon = True
+        self._cleanup_timer.start()
+        logger.info(f"Periodic cleanup scheduled every {self._cleanup_interval}s")
 
     def stop(self):
         """Stop the message broker server"""
         self.running = False
+        if self._cleanup_timer:
+            self._cleanup_timer.cancel()
+            self._cleanup_timer = None
         if self.server_socket:
             self.server_socket.close()
 
@@ -468,22 +484,40 @@ class MessageBroker:
         except Exception as e:
             logger.error(f"Failed to start message broker: {e}")
 
+    def _read_message(self, sock: socket.socket) -> str:
+        """Read a complete newline-delimited JSON message from socket.
+        Accumulates data in a buffer until a newline delimiter is found,
+        preventing truncation of large payloads.
+        """
+        buffer = b''
+        while True:
+            chunk = sock.recv(65536)
+            if not chunk:
+                raise ConnectionError("Connection closed before complete message received")
+            buffer += chunk
+            if b'\n' in buffer:
+                message, _, _remaining = buffer.partition(b'\n')
+                return message.decode('utf-8')
+            # Safety limit: reject messages larger than 1MB
+            if len(buffer) > 1024 * 1024:
+                raise ValueError("Message exceeds 1MB size limit")
+
     def _handle_client(self, client_socket: socket.socket):
         """Handle a client connection"""
         try:
-            # Read smaller initial chunk to prevent DoS
-            data = client_socket.recv(4096).decode('utf-8')
+            data = self._read_message(client_socket)
             request = json.loads(data)
 
             response = self._process_request(request)
 
-            client_socket.send(json.dumps(response).encode('utf-8'))
+            # Send response with newline delimiter
+            client_socket.sendall(json.dumps(response).encode('utf-8') + b'\n')
             client_socket.close()
         except Exception as e:
             logger.error(f"Client handling error: {e}")
             try:
                 error_response = {"status": "error", "message": str(e)}
-                client_socket.send(json.dumps(error_response).encode('utf-8'))
+                client_socket.sendall(json.dumps(error_response).encode('utf-8') + b'\n')
             except:
                 pass
             finally:
@@ -543,9 +577,11 @@ class MessageBroker:
                 logger.error(f"Failed to clean expired messages from database: {e}")
 
     def _resolve_name(self, name: str) -> str:
-        """Resolve a name through forwarding history"""
-        self._clean_expired_forwards()
-        self._clean_expired_messages()
+        """Resolve a name through forwarding history.
+
+        Note: Expired forwards and messages are cleaned up by the periodic
+        background timer (_run_periodic_cleanup), not on every name resolution.
+        """
         if name in self.name_history:
             new_name, timestamp = self.name_history[name]
             return new_name
@@ -635,9 +671,6 @@ Size: {size_kb:.1f}KB
         token_hash = self._hash_token(session_token)
 
         # Check database for valid session
-        if not self.db_path:
-            return None
-
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -691,18 +724,23 @@ Size: {size_kb:.1f}KB
                 if not self.rate_limiter.is_allowed(f"register_{instance_id}"):
                     return {"status": "error", "message": "Too many registration attempts. Please wait."}
 
-                # Validate auth token (shared secret) - required in non-dev mode
+                # Validate auth token (shared secret)
+                # Require explicit IPC_DEV_MODE=true to skip auth; otherwise a secret is mandatory
                 auth_token = request.get("auth_token")
                 shared_secret = os.environ.get("IPC_SHARED_SECRET", "")
-                is_production = os.environ.get("NODE_ENV") == "production" or os.environ.get("XERUS_ENV") == "production"
+                is_dev_mode = os.environ.get("IPC_DEV_MODE", "").lower() == "true"
 
-                if not shared_secret and is_production:
-                    return {"status": "error", "message": "IPC_SHARED_SECRET is required in production"}
+                if not shared_secret and not is_dev_mode:
+                    # Generate ephemeral secret for this session
+                    shared_secret = secrets.token_urlsafe(32)
+                    os.environ["IPC_SHARED_SECRET"] = shared_secret
+                    logger.warning("[IPC] No IPC_SHARED_SECRET set. Generated ephemeral secret. "
+                                   "Set IPC_SHARED_SECRET env var for stable auth across restarts, "
+                                   "or set IPC_DEV_MODE=true to suppress this warning.")
 
                 if shared_secret:
-                    import hashlib
-                    expected_token = hashlib.sha256(f"{instance_id}:{shared_secret}".encode()).hexdigest()
-                    if auth_token != expected_token:
+                    expected_token = hmac.new(shared_secret.encode(), instance_id.encode(), hashlib.sha256).hexdigest()
+                    if not hmac.compare_digest(auth_token or "", expected_token):
                         return {"status": "error", "message": "Invalid auth token"}
 
                 # Generate session token
@@ -941,18 +979,35 @@ class BrokerClient:
 
     @staticmethod
     def send_request(request: Dict[str, Any]) -> Dict[str, Any]:
-        """Send a request to the broker"""
+        """Send a request to the broker using newline-delimited JSON protocol"""
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.settimeout(5.0)
             client_socket.connect((IPC_HOST, IPC_PORT))
 
-            client_socket.send(json.dumps(request).encode('utf-8'))
-            response_data = client_socket.recv(65536).decode('utf-8')
-            response = json.loads(response_data)
+            # Send request with newline delimiter
+            client_socket.sendall(json.dumps(request).encode('utf-8') + b'\n')
 
+            # Read response with buffered newline-delimited read
+            buffer = b''
+            while True:
+                chunk = client_socket.recv(65536)
+                if not chunk:
+                    break
+                buffer += chunk
+                if b'\n' in buffer:
+                    message, _, _remaining = buffer.partition(b'\n')
+                    client_socket.close()
+                    return json.loads(message.decode('utf-8'))
+                # Safety limit
+                if len(buffer) > 1024 * 1024:
+                    raise ValueError("Response exceeds 1MB size limit")
+
+            # If connection closed without newline, try parsing whatever we got
             client_socket.close()
-            return response
+            if buffer:
+                return json.loads(buffer.decode('utf-8'))
+            return {"status": "error", "message": "Empty response from broker"}
 
         except Exception as e:
             return {"status": "error", "message": f"Broker connection failed: {e}"}
@@ -1171,8 +1226,7 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
         shared_secret = os.environ.get("IPC_SHARED_SECRET", "")
         auth_token = ""
         if shared_secret:
-            import hashlib
-            auth_token = hashlib.sha256(f"{instance_id}:{shared_secret}".encode()).hexdigest()
+            auth_token = hmac.new(shared_secret.encode(), instance_id.encode(), hashlib.sha256).hexdigest()
 
         response = BrokerClient.send_request({
             "action": "register",

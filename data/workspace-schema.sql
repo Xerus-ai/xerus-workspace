@@ -9,6 +9,13 @@
 PRAGMA journal_mode=WAL;
 PRAGMA foreign_keys=ON;
 
+-- NOTE: Timestamp format convention:
+-- - Most tables use TEXT (ISO 8601) for human-readable timestamps
+-- - CLI-Native Execution tables (agent_sessions, schedules, schedule_runs)
+--   use INTEGER (Unix epoch seconds) because the 9to5 scheduler daemon
+--   operates in epoch time for efficient comparison
+-- - Do NOT join timestamps across these boundaries without conversion
+
 ------------------------------------------------------------
 -- AGENT & ORGANIZATION TABLES (12 tables)
 ------------------------------------------------------------
@@ -18,7 +25,7 @@ PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS agents (
     slug TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    adapter_type TEXT NOT NULL CHECK(adapter_type IN ('claude-code', 'langchain', 'crewai', 'autogen', 'custom')),
+    adapter_type TEXT NOT NULL CHECK(adapter_type IN ('claudecode', 'codex')),
     role TEXT,
     autonomy_level TEXT NOT NULL DEFAULT 'supervised' CHECK(autonomy_level IN ('autonomous', 'supervised', 'manual')),
     status TEXT NOT NULL DEFAULT 'idle' CHECK(status IN ('idle', 'running', 'paused', 'error', 'disabled')),
@@ -436,6 +443,7 @@ CREATE TABLE IF NOT EXISTS conversations (
     title TEXT,
     summary TEXT,
     message_count INTEGER NOT NULL DEFAULT 0,
+    sdk_session_id TEXT,  -- CLI session ID for resume-on-crash
     status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'archived', 'deleted')),
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
@@ -775,3 +783,76 @@ SELECT
     SUM(tokens_output) as total_output_tokens
 FROM cost_events
 GROUP BY date(created_at), agent_slug, event_type;
+
+------------------------------------------------------------
+-- CLI-NATIVE EXECUTION TABLES (3 tables)
+------------------------------------------------------------
+
+-- Agent Sessions: persistent CLI sessions per agent
+-- Tracks Claude Code / Codex sessions running inside Daytona sandbox
+CREATE TABLE IF NOT EXISTS agent_sessions (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL,
+    agent_slug TEXT NOT NULL,
+    adapter_type TEXT NOT NULL DEFAULT 'claudecode' CHECK(adapter_type IN ('claudecode', 'codex')),
+    daytona_session_name TEXT,  -- 'agent-{slug}'
+    provider_session_id TEXT,   -- CLI's internal session ID for --resume
+    status TEXT NOT NULL DEFAULT 'idle' CHECK(status IN ('idle', 'active', 'crashed')),
+    cwd TEXT,
+    last_activity_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    UNIQUE(agent_slug, conversation_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_sessions_slug ON agent_sessions(agent_slug);
+CREATE INDEX IF NOT EXISTS idx_agent_sessions_status ON agent_sessions(status);
+
+-- NOTE: schedules and schedule_runs use INTEGER (Unix epoch seconds) for timestamps
+-- because the 9to5 scheduler daemon and backend schedule tools both operate in epoch time.
+-- All other tables use TEXT (ISO 8601) timestamps.
+
+-- Schedules: 9to5-style recurring agent automation
+-- Defines what to run, when, and with what configuration
+CREATE TABLE IF NOT EXISTS schedules (
+    id TEXT PRIMARY KEY,
+    agent_slug TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    prompt TEXT NOT NULL,
+    rrule TEXT,
+    adapter_type TEXT NOT NULL DEFAULT 'claudecode' CHECK(adapter_type IN ('claudecode', 'codex')),
+    model TEXT DEFAULT 'sonnet',
+    status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'paused', 'disabled')),
+    max_budget_usd REAL,
+    allowed_tools TEXT,  -- JSON array of tool names
+    system_prompt TEXT,
+    next_run_at INTEGER,
+    last_run_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_schedules_status ON schedules(status);
+CREATE INDEX IF NOT EXISTS idx_schedules_next_run ON schedules(next_run_at);
+CREATE INDEX IF NOT EXISTS idx_schedules_agent ON schedules(agent_slug);
+
+-- Schedule Runs: execution history for scheduled automation
+-- Each row is one execution of a schedule
+CREATE TABLE IF NOT EXISTS schedule_runs (
+    id TEXT PRIMARY KEY,
+    schedule_id TEXT NOT NULL REFERENCES schedules(id),
+    session_id TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'running', 'completed', 'failed')),
+    output TEXT,
+    result TEXT,
+    error TEXT,
+    cost_usd REAL,
+    duration_ms INTEGER,
+    num_turns INTEGER,
+    pid INTEGER,
+    started_at INTEGER,
+    completed_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_schedule_runs_schedule ON schedule_runs(schedule_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_runs_status ON schedule_runs(status);

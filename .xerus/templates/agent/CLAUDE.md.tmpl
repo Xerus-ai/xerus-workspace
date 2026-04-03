@@ -1,0 +1,33 @@
+# Module CLAUDE.md -- {{AGENT_NAME}}
+
+## Identity
+Read agents/{{AGENT_SLUG}}/SOUL.md for your personality and values.
+
+## Channel
+Primary: {{CHANNEL_PATH}}
+Read the channel CLAUDE.md for team goals, metrics, and rules.
+
+## Colleagues
+(teammates will be listed as they are added)
+
+## Skills
+| Skill | Path | Use For |
+|-------|------|---------|
+| data-steward | .claude/skills/data-steward/SKILL.md | Data persistence protocol |
+{{SKILLS_TABLE}}
+
+## Knowledge
+- shared/knowledge/company.md -- Company vision and goals
+{{KNOWLEDGE_LIST}}
+
+## Context
+- .memory/agents/{{AGENT_SLUG}}/working.md -- Your active state
+- .memory/agents/{{AGENT_SLUG}}/expertise.md -- Your learned skills
+- {{CHANNEL_PATH}}/context.md -- Channel metrics
+
+## Output
+- Write deliverables to {{CHANNEL_PATH}}/output/deliverables/
+- Post updates to {{CHANNEL_PATH}}/output/posts.jsonl
+
+## Autonomy
+Level: {{AUTONOMY_LEVEL}}

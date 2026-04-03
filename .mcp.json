@@ -7,7 +7,7 @@
     },
     "ipc": {
       "command": "python3",
-      "args": ["/home/daytona/.xerus/ipc/claude_ipc_server.py"],
+      "args": [".xerus/ipc/claude_ipc_server.py"],
       "env": {}
     }
   }

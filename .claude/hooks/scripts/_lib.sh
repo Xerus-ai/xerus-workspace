@@ -51,16 +51,81 @@ log_activity() {
 # Resolve agent's primary channel directory (relative to workspace root)
 # Usage: resolve_channel_dir "agent-slug"
 # Returns: "projects/domain/channels/channel" or empty string
+#
+# Architecture: Agents live at workspace root (agents/{slug}/)
+# They are ASSIGNED to channels via config.json primary_channel field.
 resolve_channel_dir() {
     local slug="$1"
-    local claude_file="$XERUS_WORKSPACE_ROOT/agents/$slug/CLAUDE.md"
-    if [ ! -f "$claude_file" ]; then
+
+    # Workspace-level agents (orchestrators) don't have a single channel
+    if [ -d "$XERUS_WORKSPACE_ROOT/.claude/agents/$slug" ]; then
         echo ""
         return
     fi
-    local rel
-    rel=$(grep "Primary:" "$claude_file" 2>/dev/null | sed 's/.*Primary:[[:space:]]*//' | sed 's/[[:space:]]*$//' | sed 's/\/$//' || true)
-    echo "$rel"
+
+    # Read primary_channel from agent's config.json
+    local config_file="$XERUS_WORKSPACE_ROOT/agents/$slug/config.json"
+    if [ -f "$config_file" ]; then
+        local primary_channel
+        primary_channel=$($PYTHON -c "
+import json, sys
+try:
+    with open('$config_file') as f:
+        config = json.load(f)
+    pc = config.get('primary_channel', '')
+    domain = config.get('domain', '')
+    if pc and domain:
+        print(f'projects/{domain}/channels/{pc}')
+    elif pc:
+        # Search for channel if domain not specified
+        import glob
+        matches = glob.glob('$XERUS_WORKSPACE_ROOT/projects/*/channels/' + pc)
+        if matches:
+            print(matches[0].replace('$XERUS_WORKSPACE_ROOT/', ''))
+except Exception:
+    pass
+" 2>/dev/null)
+        echo "$primary_channel"
+        return
+    fi
+
+    echo ""
+}
+
+# Get agent's full path
+# Usage: resolve_agent_dir "agent-slug"
+# Returns: absolute path to agent directory
+#
+# Architecture:
+#   - Workspace orchestrators: .claude/agents/{slug}/
+#   - All other agents: agents/{slug}/
+resolve_agent_dir() {
+    local slug="$1"
+
+    # Workspace-level orchestrators (xerus-master, xerus-cto)
+    if [ -d "$XERUS_WORKSPACE_ROOT/.claude/agents/$slug" ]; then
+        echo "$XERUS_WORKSPACE_ROOT/.claude/agents/$slug"
+        return
+    fi
+
+    # Standard agents at workspace root
+    if [ -d "$XERUS_WORKSPACE_ROOT/agents/$slug" ]; then
+        echo "$XERUS_WORKSPACE_ROOT/agents/$slug"
+        return
+    fi
+
+    echo ""
+}
+
+# Get agent's memory directory
+# Usage: resolve_agent_memory_dir "agent-slug"
+# Returns: absolute path to agent's .memory directory
+#
+# Architecture: All agent memory lives at .memory/agents/{slug}/
+# (Not channel-scoped, since agents can work across multiple channels)
+resolve_agent_memory_dir() {
+    local slug="$1"
+    echo "$XERUS_WORKSPACE_ROOT/.memory/agents/$slug"
 }
 
 # Validate a path stays within the workspace boundary

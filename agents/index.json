@@ -1,16 +1,3 @@
 {
-  "agents": {
-    "xerus-master": {
-      "name": "Xerus",
-      "role": "Master Orchestrator",
-      "is_master": true,
-      "channel": null
-    },
-    "xerus-cto": {
-      "name": "CTO",
-      "role": "Technical Lead",
-      "is_master": true,
-      "channel": null
-    }
-  }
+  "agents": {}
 }

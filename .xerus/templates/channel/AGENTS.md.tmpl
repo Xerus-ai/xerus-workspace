@@ -1,0 +1,27 @@
+# Channel Agents Guide
+
+## Beads Task Management
+
+This channel uses beads for task tracking:
+
+```bash
+bd list                     # List open tasks
+bd show <id>                # Show task details
+bd create "Task title"      # Create new task
+bd close <id>               # Close completed task
+```
+
+## Task Assignment
+
+```bash
+bd create "Draft report" --assignee agent-slug
+```
+
+## Daily Workflow
+
+1. Channel lead creates daily tasks (or shift.yaml auto-creates)
+2. Tasks assigned to agents
+3. Agents wake via heartbeat
+4. Agents read .task-context.md
+5. Agents execute and close tasks
+6. Deliverables appear in output/deliverables/

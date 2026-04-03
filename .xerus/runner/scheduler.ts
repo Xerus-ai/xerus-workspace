@@ -6,6 +6,7 @@
  * Reference: 9to5/packages/cli/src/daemon/index.ts
  */
 
+import { unlinkSync, existsSync } from "node:fs";
 import { getDb, generateId, initSchema } from "./db.ts";
 import { getAdapter } from "./adapters/registry.ts";
 import type { AdapterConfig } from "./adapters/types.ts";
@@ -63,6 +64,12 @@ function reapStaleRuns(): void {
   for (const run of running) {
     if (run.pid != null && isProcessAlive(run.pid)) continue;
 
+    // Re-check status — runSchedule may have already marked it completed
+    const current = db.query<{ status: string }, [string]>(
+      "SELECT status FROM schedule_runs WHERE id = ?"
+    ).get(run.id);
+    if (!current || current.status !== 'running') continue;
+
     db.run(
       "UPDATE schedule_runs SET status = 'failed', error = 'Process exited unexpectedly', completed_at = ? WHERE id = ?",
       [nowEpoch(), run.id],
@@ -74,7 +81,8 @@ function reapStaleRuns(): void {
 }
 
 function computeNextRunAt(rruleStr: string): number | null {
-  const rule = RRule.fromString(`RRULE:${rruleStr}`);
+  const bare = rruleStr.startsWith('RRULE:') ? rruleStr.slice(6) : rruleStr;
+  const rule = new RRule(RRule.parseString(bare));
   const next = rule.after(new Date());
   return next ? Math.floor(next.getTime() / 1000) : null;
 }
@@ -84,22 +92,11 @@ function nowEpoch(): number {
 }
 
 async function runSchedule(schedule: Schedule): Promise<void> {
-  // Compute next_run_at BEFORE executing so it's visible immediately
-  let nextRunAt: number | null = null;
-  if (schedule.rrule) {
-    nextRunAt = computeNextRunAt(schedule.rrule);
-  }
-
-  db.run(
-    "UPDATE schedules SET next_run_at = ?, updated_at = ? WHERE id = ?",
-    [nextRunAt, nowEpoch(), schedule.id],
-  );
-
   const runId = generateId();
   const sessionId = generateId();
   const now = nowEpoch();
 
-  // Insert pending run
+  // Mark the run as running (next_run_at computed AFTER process completes)
   db.run(
     `INSERT INTO schedule_runs (id, schedule_id, session_id, status, started_at, created_at)
      VALUES (?, ?, ?, 'running', ?, ?)`,
@@ -137,6 +134,15 @@ async function runSchedule(schedule: Schedule): Promise<void> {
 
     const output = await new Response(proc.stdout).text();
     const exitCode = await proc.exited;
+
+    // Compute next_run_at AFTER the process completes to prevent re-fire
+    if (schedule.rrule) {
+      const nextRunAt = computeNextRunAt(schedule.rrule);
+      db.run(
+        "UPDATE schedules SET next_run_at = ?, updated_at = ? WHERE id = ?",
+        [nextRunAt, nowEpoch(), schedule.id],
+      );
+    }
 
     if (exitCode === 0) {
       let result: string | null = null;
@@ -205,18 +211,28 @@ async function runSchedule(schedule: Schedule): Promise<void> {
   );
 }
 
+const SCHEDULE_CONCURRENCY = 3;
+
 async function tick(): Promise<void> {
-  reapStaleRuns();
+  try {
+    reapStaleRuns();
 
-  const now = nowEpoch();
-  const due = db
-    .query<Schedule, [number]>(
-      "SELECT * FROM schedules WHERE status = 'active' AND next_run_at IS NOT NULL AND next_run_at <= ?",
-    )
-    .all(now);
+    const now = nowEpoch();
+    const due = db
+      .query<Schedule, [number]>(
+        "SELECT * FROM schedules WHERE status = 'active' AND next_run_at IS NOT NULL AND next_run_at <= ?",
+      )
+      .all(now);
 
-  for (const schedule of due) {
-    await runSchedule(schedule);
+    // Run due schedules in batches to limit concurrency.
+    // Each CLI process uses 500MB+ memory, so we cap parallel spawns.
+    // Uses Promise.allSettled so one failure doesn't cancel the batch.
+    for (let i = 0; i < due.length; i += SCHEDULE_CONCURRENCY) {
+      const batch = due.slice(i, i + SCHEDULE_CONCURRENCY);
+      await Promise.allSettled(batch.map(schedule => runSchedule(schedule)));
+    }
+  } catch (err) {
+    console.error(`[scheduler] tick error: ${err}`);
   }
 }
 
@@ -228,13 +244,45 @@ function writePidFile(): void {
 
 function shutdown(): void {
   console.log("[scheduler] Stopping...");
-  try {
-    const { unlinkSync } = require("node:fs");
+  if (existsSync(PID_FILE)) {
     unlinkSync(PID_FILE);
-  } catch {
-    // PID file may not exist
   }
   process.exit(0);
+}
+
+// --- Bootstrap ---
+
+/**
+ * Compute next_run_at for active schedules that have a valid rrule but NULL next_run_at.
+ * This handles schedules created by the backend (which computes next_run_at) that
+ * lost their value due to a schema migration, or schedules created before this fix.
+ */
+function bootstrapOrphanedSchedules(): void {
+  const orphaned = db
+    .query<Schedule, []>(
+      "SELECT * FROM schedules WHERE status = 'active' AND rrule IS NOT NULL AND next_run_at IS NULL",
+    )
+    .all();
+
+  for (const schedule of orphaned) {
+    if (!schedule.rrule) continue;
+    const nextRunAt = computeNextRunAt(schedule.rrule);
+    if (nextRunAt != null) {
+      db.run(
+        "UPDATE schedules SET next_run_at = ?, updated_at = ? WHERE id = ?",
+        [nextRunAt, nowEpoch(), schedule.id],
+      );
+      console.log(
+        `[scheduler] Bootstrapped next_run_at for "${schedule.name}" (${schedule.id})`,
+      );
+    }
+  }
+
+  if (orphaned.length > 0) {
+    console.log(
+      `[scheduler] Bootstrapped ${orphaned.length} orphaned schedule(s)`,
+    );
+  }
 }
 
 // --- Main ---
@@ -248,6 +296,9 @@ export function startScheduler(): void {
 
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
+
+  // Bootstrap orphaned schedules (next_run_at = NULL with valid rrule)
+  bootstrapOrphanedSchedules();
 
   // Initial tick
   tick();
