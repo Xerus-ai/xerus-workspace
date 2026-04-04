@@ -335,6 +335,7 @@ CREATE TABLE IF NOT EXISTS chat_executions (
     agent_response TEXT,
     response_time_ms INTEGER,
     tokens_used INTEGER NOT NULL DEFAULT 0,
+    message_metadata TEXT,  -- JSON: {parts: TurnPart[], tool_calls: ToolCallDetail[]}
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     FOREIGN KEY (session_id) REFERENCES execution_sessions(id) ON DELETE SET NULL
 );
