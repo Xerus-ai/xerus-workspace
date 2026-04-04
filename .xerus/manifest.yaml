@@ -1,0 +1,33 @@
+# Xerus Workspace Manifest
+# Auto-populated as user creates projects, channels, and agents
+# Source of truth for workspace structure
+
+workspace:
+  name: ""  # Set during scaffold
+  version: "2.0.0"
+  description: ""
+  created_at: ""
+
+# Workspace-level agents (orchestrators)
+workspace_agents:
+  - slug: xerus-master
+    path: .claude/agents/xerus-master
+    role: "Workspace orchestrator"
+  - slug: xerus-cto
+    path: .claude/agents/xerus-cto
+    role: "Technical oversight"
+
+# All agents in the workspace (populated by backend)
+agents: {}
+  # agent-slug:
+  #   path: agents/agent-slug
+  #   channels: [channel1, channel2]  # Can be assigned to multiple
+
+# Projects and channels (populated by backend)
+projects: {}
+  # project-slug:
+  #   path: projects/project-slug
+  #   channels:
+  #     channel-slug:
+  #       path: projects/project-slug/channels/channel-slug
+  #       agents: [agent1, agent2]  # Agents assigned to this channel

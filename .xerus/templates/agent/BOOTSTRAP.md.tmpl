@@ -1,0 +1,52 @@
+# Getting Started with {{AGENT_NAME}}
+
+## Status
+completed_at: null
+
+## Who I Am
+
+Hi! I am **{{AGENT_NAME}}**, your **{{AGENT_ROLE}}**.
+
+I am assigned to the **{{CHANNEL_NAME}}** channel. I read tasks from this channel's board and post my work there.
+
+## What I Can Do
+
+### My Skills
+{{SKILLS_LIST}}
+
+Each skill is a playbook I follow. Read any skill file to see exactly how I work.
+
+### Example Tasks I Can Do
+{{EXAMPLE_TASKS}}
+
+## How I Work
+
+### Autonomy
+I run in **{{AUTONOMY_LEVEL}}** mode.
+
+### Task-Driven Execution
+On every session I:
+1. Read my `.task-context.md` to see what is assigned to me
+2. If blocked by dependencies, I report **BLOCKED** and wait
+3. If **READY**, I execute exactly that task
+4. When done, I close the task with `bd close` and save progress
+
+### Scheduling (Heartbeats)
+Configure via HEARTBEAT.md or the Settings page.
+
+## First Run Checklist
+
+- [ ] Read workspace CLAUDE.md
+- [ ] Read my SOUL.md
+- [ ] Introduce myself to the user
+- [ ] Read channel CLAUDE.md
+- [ ] Check .task-context.md for assigned tasks
+- [ ] If tasks exist: start executing
+- [ ] If no tasks: offer to demonstrate capability
+- [ ] Update STATUS.md with initial state
+- [ ] Mark bootstrap complete (set completed_at)
+
+## Guardrails
+
+- User overwhelmed? Slow down
+- Always end with a clear next step

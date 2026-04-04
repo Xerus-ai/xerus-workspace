@@ -1,7 +1,8 @@
 {
   "slug": "xerus-cto",
   "name": "CTO",
-  "role": "Technical Lead",
+  "role": "agent",
+  "adapter_type": "claudecode",
   "model": "sonnet",
   "autonomy_level": "autonomous",
   "is_master": true,

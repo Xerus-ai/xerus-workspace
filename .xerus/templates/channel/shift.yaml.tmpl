@@ -1,0 +1,15 @@
+name: "{{CHANNEL_NAME}} Shift"
+cadence: daily
+timezone: "{{TIMEZONE}}"
+
+shifts:
+  default:
+    time: "00:00-23:59"
+    agents: []  # Populated when agents are added
+
+daily_standup:
+  time: "09:00"
+  participants: all
+  output: .channel/state/standups/{date}.md
+
+tasks: []

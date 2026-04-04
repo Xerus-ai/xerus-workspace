@@ -1,0 +1,73 @@
+{
+  "version": "2.0.0",
+  "description": "Scaffold configuration for dynamic workspace creation",
+
+  "project": {
+    "files": [
+      {"template": "CLAUDE.md.tmpl", "target": "CLAUDE.md"}
+    ],
+    "directories": ["channels"]
+  },
+
+  "channel": {
+    "files": [
+      {"template": "CLAUDE.md.tmpl", "target": "CLAUDE.md"},
+      {"template": "context.md.tmpl", "target": "context.md"},
+      {"template": "shift.yaml.tmpl", "target": "shift.yaml"},
+      {"template": "AGENTS.md.tmpl", "target": "AGENTS.md"}
+    ],
+    "directories": [
+      "agents",
+      "scratch",
+      "output/deliverables",
+      ".beads",
+      ".channel/state/standups",
+      ".channel/state/handoffs",
+      ".channel/state/metrics",
+      ".memory/agents"
+    ],
+    "init_files": [
+      {"path": "output/posts.jsonl", "content": ""},
+      {"path": ".beads/issues.jsonl", "content": ""},
+      {"path": ".beads/.gitattributes", "content": "issues.jsonl merge=beads\n"}
+    ]
+  },
+
+  "agent": {
+    "files": [
+      {"template": "CLAUDE.md.tmpl", "target": "CLAUDE.md"},
+      {"template": "SOUL.md.tmpl", "target": "SOUL.md"},
+      {"template": "STATUS.md.tmpl", "target": "STATUS.md"},
+      {"template": "BOOTSTRAP.md.tmpl", "target": "BOOTSTRAP.md"},
+      {"template": "HEARTBEAT.md.tmpl", "target": "HEARTBEAT.md"},
+      {"template": "RELATIONSHIPS.md.tmpl", "target": "RELATIONSHIPS.md"},
+      {"template": "USER.md.tmpl", "target": "USER.md"},
+      {"template": "config.json.tmpl", "target": "config.json"}
+    ],
+    "directories": [
+      "inbox/processed",
+      "data",
+      "knowledge",
+      "playbooks"
+    ],
+    "memory_files": [
+      {"path": "working.md", "content": "# Working State\n\n(no active work yet)\n"},
+      {"path": "expertise.md", "content": "# Expertise\n\n(learned skills will be recorded here)\n"}
+    ]
+  },
+
+  "variables": {
+    "PROJECT_NAME": {"required": true, "type": "string"},
+    "PROJECT_MISSION": {"required": true, "type": "string"},
+    "CHANNEL_NAME": {"required": true, "type": "string"},
+    "CHANNEL_MISSION": {"required": true, "type": "string"},
+    "AGENT_NAME": {"required": true, "type": "string"},
+    "AGENT_SLUG": {"required": true, "type": "string", "pattern": "^[a-z0-9-]+$"},
+    "AGENT_ROLE": {"required": true, "type": "string"},
+    "AUTONOMY_LEVEL": {"required": false, "type": "string", "default": "supervised"},
+    "ADAPTER_TYPE": {"required": false, "type": "string", "default": "claudecode"},
+    "MODEL": {"required": false, "type": "string", "default": "sonnet"},
+    "TIMEZONE": {"required": false, "type": "string", "default": "UTC"},
+    "CREATED_AT": {"required": false, "type": "string", "auto": "iso8601"}
+  }
+}

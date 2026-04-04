@@ -1,7 +1,8 @@
 {
   "slug": "xerus-master",
   "name": "Xerus",
-  "role": "Master Orchestrator",
+  "role": "orchestrator",
+  "adapter_type": "claudecode",
   "model": "claude-sonnet-4.5",
   "autonomy_level": "autonomous",
   "is_master": true,

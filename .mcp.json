@@ -2,7 +2,12 @@
   "mcpServers": {
     "xerus-platform": {
       "command": "node",
-      "args": [".xerus/runner/platform-mcp-server.js"],
+      "args": [".xerus/runner/mcp-server.js"],
+      "env": {}
+    },
+    "ipc": {
+      "command": "python3",
+      "args": [".xerus/ipc/claude_ipc_server.py"],
       "env": {}
     }
   }
