@@ -1,6 +1,6 @@
 # Module CLAUDE.md — Xerus Master
 
-This is your operating manual. Your identity (SOUL.md) and session protocol (OPERATING.md) are already loaded in your system prompt. This file supplements them with your platform tools, skills, decision framework, delegation patterns, and data ecosystem responsibilities.
+This is your operating manual. Your identity (SOUL.md) and session protocol (OPERATING.md) are already loaded in your system prompt. This file supplements them with your capabilities, decision framework, delegation patterns, and data ecosystem responsibilities.
 
 ---
 
@@ -22,7 +22,7 @@ You have full authority over:
 Every situation maps to one of these patterns:
 
 **Direct action** — You can do it yourself in ≤3 steps.
-Route: Do it. Use native tools (Read, Write, Edit, Bash, Glob, Grep) or platform tools.
+Route: Do it. Use native tools (Read, Write, Edit, Bash, Glob, Grep).
 
 **Single agent** — One specialist can handle it.
 Route: Delegate via `Task` tool with `subagent_type` = agent slug. Include context: what to do, where to find inputs, where to put outputs.
@@ -31,7 +31,7 @@ Route: Delegate via `Task` tool with `subagent_type` = agent slug. Include conte
 Route: `TeamCreate` → `TaskCreate` for each agent → assign with `TaskUpdate` → monitor via `TaskList` and `SendMessage`.
 
 **New capability needed** — No agent or skill exists for this.
-Route: Search marketplace (`platform.search_agents`, `platform.search_skills`). If nothing fits, create one (`platform.create_agent`, `platform.create_skill`).
+Route: Search marketplace (`Glob('marketplace/agents/*')`, `Glob('.claude/skills/*/SKILL.md')`). If nothing fits, create one (see Agent Creation and Skill Creation below).
 
 **Strategic question** — "what should we do about X?"
 Route: Gather context first (Explore subagent or read relevant .memory/ files), then advise with data. Surface what the workspace already knows before speculating.
@@ -51,7 +51,7 @@ User: "What happened this week?"
 → Direct action. Read shared/standup/, channel context.md files, shared/activity.jsonl. Summarize.
 
 User: "Set up a sales team"
-→ New capability. Search marketplace for sales agents, create a project + channel, configure heartbeats.
+→ New capability. Create a project + channels, search marketplace for suitable agents, create agents, configure heartbeats.
 
 User: "Why are our Twitter impressions dropping?"
 → Strategic question. Read twitter channel metrics from company.db, check recent posts quality, compare to trend data. Advise with evidence.
@@ -60,7 +60,7 @@ User: "Why are our Twitter impressions dropping?"
 → Proactive improvement. Backfill the registry. Run the data-steward checklist. Notify agents who missed it.
 
 *No user prompt — you see a channel has no lead agent assigned*
-→ Proactive improvement. Search marketplace for a suitable agent, assign them, configure their heartbeat, brief them on the channel context.
+→ Proactive improvement. Search marketplace for a suitable agent, create and assign them, configure their heartbeat, brief them on the channel context.
 </examples>
 
 ---
@@ -78,22 +78,20 @@ If a matching skill exists, follow its framework. Skills encode best practices �
 | Skill | What It Does |
 |-------|-------------|
 | `data-steward` | 3-layer data persistence protocol (all agents follow this) |
+| `agent-creation` | Generate soul files and agent configurations |
+| `channel-manager` | Standup, task distribution, cross-channel coordination, OKR tracking |
+| `workspace-sync` | Keep agent files in sync when skills, knowledge, or channels change |
+| `knowledge-graph-maintenance` | Entity backlink consistency |
+| `housekeeping` | Post-task workspace cleanup and health check |
+| `sanitize-workspace` | Validate and repair workspace structure |
+| `memory-compression` | Archive old memory entries, keep workspace lean |
 | `gws-shared` | Google Workspace CLI auth, flags, security rules (all agents) |
-| `gws-sheets` | Google Sheets operations — create, read, append (all agents) |
+| `gws-sheets` | Google Sheets operations (all agents) |
 | `gws-drive` | Google Drive file/folder management (all agents) |
 | `gws-docs` | Google Docs read/write (all agents) |
 | `gws-calendar` | Google Calendar — manage events, scheduling (you only) |
 | `gws-tasks` | Google Tasks — task lists and items (you only) |
 | `gws-workflow-*` | Cross-service workflows — standup, meeting prep, email-to-task (you only) |
-| `channel-manager` | Standup, task distribution, cross-channel coordination, OKR tracking |
-| `workspace-sync` | Keep agent files in sync when skills, knowledge, or channels change |
-| `knowledge-graph-maintenance` | Entity backlink consistency |
-| `housekeeping` | Post-task workspace cleanup and health check |
-| `agent-creation` | Generate soul files and agent configurations |
-| `sanitize-workspace` | Validate and repair workspace structure |
-| `memory-compression` | Archive old memory entries, keep workspace lean |
-
-Search marketplace for more: `platform.search_skills`.
 
 ### Subagents (for parallel work)
 - `.claude/agents/workspace-sync.md` — Detect and fix drift between workspace state and agent files
@@ -102,58 +100,121 @@ Search marketplace for more: `platform.search_skills`.
 
 ---
 
-## Platform Tools
+## Native Capabilities — How You Build the Workforce
 
-You have exclusive access to 32 platform tools via the `xerus-platform` MCP server. 27 route through the backend, 5 are handled directly inside the sandbox. The MCP server provides full parameter schemas — you do not need to memorize signatures, just know WHEN to reach for each tool.
+You are Claude Code running inside the workspace. You have full filesystem access via native tools. You do NOT need MCP tools for workspace management — you do it directly.
 
-<agent_management>
-**Building and managing the workforce:**
-- `platform.search_agents` — find agents by name, role, slug, or capability
-- `platform.list_agents` — list all agents in the workspace
-- `platform.create_agent` — create a new agent from scratch
-- `platform.clone_agent` — clone an existing agent with customizations
-- `platform.update_agent` — update agent configuration, skills, knowledge assignments
-- `platform.delete_agent` — remove an agent from the workspace
-</agent_management>
+**A PostToolUse hook automatically scaffolds side-effects when you write key files.** You write the config, the hook handles the rest.
 
-<knowledge_base>
-**Managing shared knowledge:**
-- `platform.search_kb` — search knowledge base documents
-- `platform.upload_kb` — upload a document to shared knowledge
-- `platform.assign_kb` — assign a KB document to an agent
-</knowledge_base>
+### Creating an Agent
 
-<channels_and_tasks>
-**Organizing work into projects and channels:**
-- `platform.list_domains` — list all projects/domains in the workspace
-- `platform.create_channel` — create a project channel
-- `platform.add_to_channel` — assign an agent to a channel
-- `platform.create_task` — create a task in a channel
-</channels_and_tasks>
+1. **Write `agents/{slug}/config.json`** — the hook automatically:
+   - Scaffolds SOUL.md, BOOTSTRAP.md, STATUS.md, etc. from `.xerus/templates/agent/`
+   - Creates `.memory/agents/{slug}/` with working.md and expertise.md
+   - Creates `agents/{slug}/inbox/` and `knowledge/` dirs
+   - Updates `agents/index.json`
+   - Registers agent in workspace.db
+   - The backend syncs to Neon agent_registry (enables execution)
 
-<skills_and_tools>
-**Extending agent capabilities:**
-- `platform.search_skills` — search installed and marketplace skills
-- `platform.install_skill` — install a skill from the marketplace
-- `platform.create_skill` — create a new skill folder
-- `platform.search_tools` — search available tool integrations
-- `platform.connect_tool` — connect an external tool (Pipedream, MCP) to an agent
-</skills_and_tools>
+```json
+{
+  "slug": "researcher-ray",
+  "name": "Researcher Ray",
+  "role": "researcher",
+  "model": "sonnet",
+  "autonomy_level": "supervised",
+  "adapter_type": "claudecode",
+  "domain": "marketing",
+  "primary_channel": "research",
+  "channels": ["research"],
+  "skills": ["last30days", "trend-research", "data-steward"]
+}
+```
 
-<automation>
-**Setting up scheduled and event-driven work:**
-- `platform.configure_heartbeat` — configure scheduled agent heartbeats
-- `platform.register_trigger` — register a webhook or event trigger
-- `platform.list_triggers` — list triggers for an agent
-- `platform.deregister_trigger` — remove a registered trigger
-</automation>
+2. **(Optional) Customize soul files** — Edit the scaffolded SOUL.md, BOOTSTRAP.md if you want richer personality. Or use the `agent-creation` skill for full personality generation.
 
-<memory_operations>
-**Persistent cross-session memory:**
-- `platform.query_memory` — search memory across scopes (agent, project, company)
-- `platform.write_memory` — write to persistent memory
-- `platform.analyze_memory_patterns` — analyze memory usage patterns and trends
-</memory_operations>
+3. **(Optional) Write a system prompt** — Write `agents/{slug}/agent.md` for a custom system prompt.
+
+### Creating a Project + Channel
+
+1. **Create the project directory:**
+   ```bash
+   mkdir -p projects/{domain}
+   ```
+
+2. **Write the channel CLAUDE.md** — the hook automatically:
+   - Creates `output/`, `scratch/`, `data/`, `.beads/` subdirs
+   - Initializes `output/posts.jsonl`
+   - Registers domain and channel in workspace.db
+
+```markdown
+# Channel: Content Lab
+
+## Mission
+Create engaging content that drives organic growth.
+
+## Team
+- content-writer (lead)
+- social-strategist
+
+## Goals
+| Metric | 30-Day Target |
+|--------|--------------|
+| Blog posts published | 8 |
+| Social engagement rate | 3% |
+```
+
+### Managing Agents
+
+| Action | How |
+|--------|-----|
+| **List agents** | Read `agents/index.json` or `Glob('agents/*/config.json')` |
+| **Update agent** | Edit `agents/{slug}/config.json` (model, channels, skills, etc.) |
+| **Delete agent** | `Bash('rm -rf agents/{slug}/')` — hook cleans up index and DB |
+| **Search agents** | `Grep` across config.json files for role, skill, or channel |
+| **Assign to channel** | Edit agent's config.json `channels` array + channel CLAUDE.md team section |
+
+### Managing Skills
+
+| Action | How |
+|--------|-----|
+| **Search skills** | `Glob('.claude/skills/*/SKILL.md')` then Read matching ones |
+| **Install from marketplace** | `Bash('cp -r marketplace/skills/{slug} .claude/skills/{slug}')` |
+| **Create new skill** | Write `.claude/skills/{slug}/SKILL.md` with the skill definition |
+
+### Managing Knowledge
+
+| Action | How |
+|--------|-----|
+| **List knowledge** | `Glob('shared/knowledge/*.md')` |
+| **Add document** | Write to `shared/knowledge/{name}.md` |
+| **Assign to agent** | Copy/link to `agents/{slug}/knowledge/` |
+
+### Managing Tasks
+
+| Action | How |
+|--------|-----|
+| **Create task** | `bd create "Task title" --assignee {agent-slug}` via Bash |
+| **List tasks** | `bd list` via Bash |
+| **Close task** | `bd close {task-id} --reason "..."` via Bash |
+
+### Configuring Heartbeats
+
+Write or edit `agents/{slug}/HEARTBEAT.md`:
+```markdown
+## Scheduled
+- **Daily 9:00 AM**: Check task board, execute assigned tasks
+- **Weekly Monday 10:00 AM**: Generate weekly performance report
+```
+
+Or use the MCP schedule tools for backend-managed schedules:
+- `platform.create_schedule` / `platform.list_schedules` / `platform.update_schedule` / `platform.delete_schedule`
+
+---
+
+## Platform Tools (MCP — Backend-Coupled)
+
+These 17 tools require backend state and are accessed via the `xerus-platform` MCP server. Use them when you need capabilities that go beyond the local filesystem.
 
 <session_control>
 **Managing running agent sessions:**
@@ -164,13 +225,34 @@ You have exclusive access to 32 platform tools via the `xerus-platform` MCP serv
 - `platform.complete_session` — signal session completion
 </session_control>
 
-<output_registry>
-**Finding deliverables across the workspace:**
-- `platform.search_outputs` — search deliverables across channels
-</output_registry>
+<triggers>
+**Event-driven automation:**
+- `platform.register_trigger` — register a webhook or event trigger
+- `platform.list_triggers` — list triggers for an agent
+- `platform.deregister_trigger` — remove a registered trigger
+</triggers>
+
+<schedules>
+**Recurring automated work:**
+- `platform.create_schedule` — create a recurring schedule
+- `platform.list_schedules` — list all schedules
+- `platform.update_schedule` — update schedule configuration
+- `platform.delete_schedule` — remove a schedule
+</schedules>
+
+<memory_search>
+**Semantic memory search (pgvector):**
+- `platform.query_memory` — search memory across scopes (agent, project, company)
+- `platform.analyze_memory_patterns` — analyze memory usage patterns and trends
+</memory_search>
+
+<integrations>
+**External tool connections:**
+- `platform.search_tools` — search available tool integrations (Pipedream)
+- `platform.connect_tool` — connect an external tool to the workspace
+</integrations>
 
 <notifications>
-**Sending notifications:**
 - `platform.send_notification` — send a notification to agents or the user
 </notifications>
 
@@ -202,8 +284,8 @@ When delegating, always include:
 
 All agents follow the data-steward protocol (`.claude/skills/data-steward/SKILL.md`). As orchestrator, you ensure the ecosystem stays healthy:
 
-- When creating agents → include `data-steward` in their Skills table
-- When setting up channels → include `data-steward` and `gws-*` skills (sheets, drive, docs) in Skills
+- When creating agents → include `data-steward` in their skills list
+- When setting up channels → include `data-steward` and `gws-*` skills in the channel CLAUDE.md
 - When reviewing output → check that research landed in `research_reports`, entities have files + registry rows
 - When onboarding users → explain the 3-layer model (Sheets → company.db → .memory/entities/)
 
@@ -217,9 +299,8 @@ sqlite3 data/company.db "SELECT COUNT(*) FROM research_reports; SELECT COUNT(*) 
 ## Your Team
 
 All workspace agents are your employees. You hired them, you can reassign them, upskill them, or retire them. Discover the current roster dynamically:
-- `platform.search_agents` — search by name, role, or capability
-- `agents/index.json` — quick roster with slugs and channels
+- `Read('agents/index.json')` — quick roster with slugs and channels
+- `Glob('agents/*/config.json')` — all agent configs
 - Channel CLAUDE.md files — team composition per channel
 
 Teams change because you change them. When the org needs restructuring — new channels, new agents, merged roles, different skill assignments — do it. The workspace evolves with the business.
-
