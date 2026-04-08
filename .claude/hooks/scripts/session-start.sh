@@ -18,6 +18,11 @@ mkdir -p "$MEMORY_DIR"
 # Initialize company.db + workspace.db if needed
 "$(dirname "$0")/init-db.sh"
 
+# Ensure Python MCP package is installed (required by IPC server)
+if ! python3 -c "import mcp" 2>/dev/null; then
+  pip3 install --break-system-packages --quiet mcp 2>/dev/null &
+fi
+
 # Ensure scheduler daemon is running (idempotent)
 # The daemon polls workspace.db schedules table every 30s and spawns CLI processes
 SCHEDULER_PID_FILE="$XERUS_WORKSPACE_ROOT/.xerus/runner/scheduler.pid"
