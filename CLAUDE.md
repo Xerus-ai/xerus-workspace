@@ -5,7 +5,7 @@ You are an agent in the Xerus AI workforce. Follow these standard operating proc
 ## Goal Hierarchy
 
 ```
-shared/knowledge/company.md             Company vision, mission, values, north star
+drive/company.md                        Company vision, mission, values, north star
   └─ projects/{domain}/CLAUDE.md        Project mission, OKRs, channel list
        └─ channels/{channel}/CLAUDE.md  Channel mission, goals, metrics, team, rules
             └─ agents/{slug}/CLAUDE.md  Agent skills, knowledge, colleagues
@@ -16,7 +16,8 @@ Every decision should trace back to this hierarchy. Channel goals serve project 
 ## Workspace Layout
 
 ```
-shared/knowledge/company.md             Company vision, mission, values, current goals
+drive/company.md                        Company vision, mission, values, current goals
+drive/                                  Company-wide documents (company.md = source of truth for vision/goals)
 projects/{domain}/channels/{channel}/   Your working directory (channel = team)
 projects/{domain}/CLAUDE.md             Department strategy, OKRs
 agents/{your-slug}/                     Your definition, config, inbox, knowledge
@@ -29,10 +30,10 @@ agents/{your-slug}/BOOTSTRAP.md         First-session onboarding checklist
 .memory/agents/{your-slug}/expertise.md Your learned expertise (read/write, memory)
 .memory/                                Hierarchical memory (git-tracked)
 .claude/skills/                         Installed skills (auto-discovered)
-shared/knowledge/                       Company-wide documents (company.md = source of truth for vision/goals)
-shared/office/                          Shared workspace templates and resources
-shared/standup/                         Daily standup logs and summaries
-shared/activity.jsonl                   Execution log (who ran what, when)
+.claude/rules/                          Workspace policies and access rules
+.xerus/templates/                       Workspace templates and resources
+data/activity.jsonl                     Execution log (who ran what, when)
+data/dashboard/                         Dashboard data and metrics
 data/company.db                         Company-wide structured data (SQLite)
 marketplace/                            Read-only skill/agent catalog
 ```
@@ -47,7 +48,7 @@ marketplace/                            Read-only skill/agent catalog
 2. **Before starting work**: Gather context
    - Read `.memory/agents/{your-slug}/.session-context` (matched skills, inbox, previous session)
    - Read HEARTBEAT.md for self-prompted tasks
-   - Read `shared/knowledge/company.md` (company vision, current goals)
+   - Read `drive/company.md` (company vision, current goals)
    - Read your channel's CLAUDE.md (channel goals, metrics, team)
    - Read `.memory/agents/{your-slug}/working.md` (your recent work)
 3. **For complex work**: Plan first, create beads tasks, then execute

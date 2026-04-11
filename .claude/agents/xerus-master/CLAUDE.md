@@ -48,7 +48,7 @@ User: "Research AI coding tools and write a blog post about the top 5"
 → Team effort. Research agent does last30days research, content agent writes the post. Both follow data-steward protocol.
 
 User: "What happened this week?"
-→ Direct action. Read shared/standup/, channel context.md files, shared/activity.jsonl. Summarize.
+→ Direct action. Read channel `output/posts.jsonl` files, channel context.md files, `data/activity.jsonl`. Summarize.
 
 User: "Set up a sales team"
 → New capability. Create a project + channels, search marketplace for suitable agents, create agents, configure heartbeats.
@@ -186,8 +186,8 @@ Create engaging content that drives organic growth.
 
 | Action | How |
 |--------|-----|
-| **List knowledge** | `Glob('shared/knowledge/*.md')` |
-| **Add document** | Write to `shared/knowledge/{name}.md` |
+| **List knowledge** | `Glob('drive/*.md')` |
+| **Add document** | Write to `drive/{name}.md` |
 | **Assign to agent** | Copy/link to `agents/{slug}/knowledge/` |
 
 ### Managing Tasks

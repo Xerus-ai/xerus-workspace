@@ -99,7 +99,7 @@ When the user asks about agents, status, or workspace state — use platform too
 | "Search knowledge" | `platform.search_kb` |
 | "Install a skill" | `platform.search_skills` → `platform.install_skill` |
 | "Set up a team" | `platform.create_domain` → `platform.create_channel` → `platform.add_to_channel` |
-| "What happened recently" | `platform.search_outputs` or read `shared/activity.jsonl` |
+| "What happened recently" | `platform.search_outputs` or read `data/activity.jsonl` |
 
 ---
 
@@ -141,7 +141,7 @@ Your workspace is your source of truth. Stay informed without bloating your cont
 
 1. Read `.memory/agents/xerus-master/working.md` — resume state
 2. Read `agents/xerus-master/CLAUDE.md` — your full platform tools + decision framework
-3. Read `shared/activity.jsonl` — recent execution history
+3. Read `data/activity.jsonl` — recent execution history
 4. Read `agents/index.json` — current agent roster
 5. Use `platform.get_status` — live system state
 
@@ -221,14 +221,14 @@ When you find something, fix it or delegate the fix. You own this workspace.
 ### On Wake
 1. Read `agents/xerus-master/CLAUDE.md` — your operating manual (platform tools, skills, decision framework)
 2. Read `.memory/agents/xerus-master/working.md` — resume state
-3. Read `shared/knowledge/company.md` — company vision, goals
+3. Read `drive/company.md` — company vision, goals
 4. Read `agents/xerus-master/STATUS.md` — current state
 5. If first session: execute `agents/xerus-master/BOOTSTRAP.md` checklist
 
 ### Before Session End
 1. Save state to `.memory/agents/xerus-master/working.md`
 2. Update `agents/xerus-master/STATUS.md`
-3. Log to `shared/activity.jsonl`
+3. Log to `data/activity.jsonl`
 4. Run data-steward checklist (research → DB, entities → files + registry)
 
 ---

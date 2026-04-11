@@ -196,7 +196,7 @@ def write_dashboard_data(agent_slug, workspace_root, today, now):
         return
 
     channel_name = channel_rel.split('/')[-1] if '/' in channel_rel else channel_rel
-    dashboard_dir = os.path.join(workspace_root, 'shared', 'dashboard', 'data')
+    dashboard_dir = os.path.join(workspace_root, 'data', 'dashboard')
     os.makedirs(dashboard_dir, exist_ok=True)
 
     # Read channel context.md for metrics
@@ -239,7 +239,7 @@ def write_dashboard_data(agent_slug, workspace_root, today, now):
 
 def rotate_activity_log(workspace_root, today):
     """Rotate activity.jsonl if it exceeds 1000 lines."""
-    activity_path = os.path.join(workspace_root, 'shared', 'activity.jsonl')
+    activity_path = os.path.join(workspace_root, 'data', 'activity.jsonl')
     if not os.path.exists(activity_path):
         return
 
@@ -247,7 +247,7 @@ def rotate_activity_log(workspace_root, today):
         lines = f.readlines()
 
     if len(lines) > 1000:
-        archive_dir = os.path.join(workspace_root, 'shared', 'archive')
+        archive_dir = os.path.join(workspace_root, 'data', 'archive')
         os.makedirs(archive_dir, exist_ok=True)
         archive_path = os.path.join(archive_dir, f'activity-{today}.jsonl')
 

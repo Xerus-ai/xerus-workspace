@@ -357,11 +357,11 @@ Grep pattern: "pricing strategy"
 Glob pattern: "agents/research-rachel/knowledge/**"
 ```
 
-**Shared knowledge** is also available at `shared/knowledge/`:
+**Company-wide knowledge** is also available at `drive/`:
 
 ```
 Grep pattern: "company vision"
-     path: shared/knowledge/
+     path: drive/
      output_mode: content
 ```
 

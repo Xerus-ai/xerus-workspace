@@ -38,7 +38,7 @@ You own the quality and output of your channel. Responsibilities:
 
 ## Weekly Standup
 
-Write a channel summary to `shared/standup/{channel}-{date}.md` weekly:
+Write a channel summary to your channel's `output/posts.jsonl` weekly:
 
 ```markdown
 # {Channel} Standup -- {date}
@@ -69,7 +69,7 @@ Write a channel summary to `shared/standup/{channel}-{date}.md` weekly:
 
 ## Dashboard Data
 
-After each standup, write your channel metrics to `shared/dashboard/data/{channel}.json`:
+After each standup, write your channel metrics to `data/dashboard/{channel}.json`:
 
 ```json
 {

@@ -18,11 +18,11 @@
 
 ## Who We Serve
 <!-- Your ideal customer. Be specific. -->
-{TODO: See shared/knowledge/target-audience.md for detailed profiles.}
+{TODO: See drive/target-audience.md for detailed profiles.}
 
 ## What We Build
 <!-- Product summary. -->
-{TODO: See shared/knowledge/xerus-product-brief.md for full brief.}
+{TODO: See drive/xerus-product-brief.md for full brief.}
 
 ## Current Stage
 <!-- Where are you right now? -->

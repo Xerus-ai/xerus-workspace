@@ -120,7 +120,7 @@ fi
 
 # --- Check 4: Channel boundary enforcement for file writes ---
 # Agents can only write to their channel's directories (scratch/, output/, .memory/)
-# or shared workspace locations (shared/, data/, .memory/entities/)
+# or workspace locations (drive/, data/, .memory/entities/)
 if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   FILE_PATH="${CLAUDE_TOOL_INPUT_file_path:-}"
 

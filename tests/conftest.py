@@ -27,9 +27,15 @@ def projects_dir(workspace_root):
 
 
 @pytest.fixture
-def shared_dir(workspace_root):
-    """Return the shared directory."""
-    return workspace_root / "shared"
+def drive_dir(workspace_root):
+    """Return the drive directory (user content)."""
+    return workspace_root / "drive"
+
+
+@pytest.fixture
+def rules_dir(workspace_root):
+    """Return the .claude/rules directory (governance policies)."""
+    return workspace_root / ".claude" / "rules"
 
 
 @pytest.fixture

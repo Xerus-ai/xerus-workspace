@@ -9,7 +9,7 @@ Detect drift between workspace state (installed skills, knowledge docs, channel 
 ## When to Invoke
 
 - After skills are installed or removed from `.claude/skills/`
-- After knowledge docs are added, updated, or deleted in `shared/knowledge/`
+- After knowledge docs are added, updated, or deleted in `drive/`
 - After channel CLAUDE.md files are modified
 - After agents are added or removed from the roster
 - When `.claude/sync-queue.jsonl` has pending entries
@@ -23,7 +23,7 @@ Detect drift between workspace state (installed skills, knowledge docs, channel 
 
 ## Output
 
-Post sync report to `shared/activity.jsonl`:
+Post sync report to `data/activity.jsonl`:
 ```json
 {"agent_slug":"workspace-sync","action":"sync_complete","timestamp":"...","details":"Synced N agents. Added: X refs. Removed: Y refs. Broken: Z refs."}
 ```

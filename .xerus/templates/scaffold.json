@@ -17,14 +17,12 @@
       {"template": "AGENTS.md.tmpl", "target": "AGENTS.md"}
     ],
     "directories": [
-      "agents",
       "scratch",
       "output/deliverables",
       ".beads",
       ".channel/state/standups",
       ".channel/state/handoffs",
-      ".channel/state/metrics",
-      ".memory/agents"
+      ".channel/state/metrics"
     ],
     "init_files": [
       {"path": "output/posts.jsonl", "content": ""},

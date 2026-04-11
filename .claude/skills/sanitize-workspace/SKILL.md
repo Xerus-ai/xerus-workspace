@@ -36,9 +36,8 @@ agents/index.json                      # Agent registry
 agents/xerus-master/                   # Master agent (platform-owned)
 agents/xerus-master/config.json        # Must be valid JSON
 projects/                              # User projects
-shared/knowledge/                      # Shared knowledge base
-shared/inbox/                          # Cross-team messages
-shared/activity.jsonl                  # Execution log
+drive/                                 # Shared knowledge base
+data/activity.jsonl                    # Execution log
 data/                                  # Structured data
 marketplace/                           # Read-only skill/agent catalog
 ```
@@ -71,8 +70,8 @@ marketplace/                           # Read-only skill/agent catalog
      `.memory/user/`
    - `.beads/`
    - `agents/`, `agents/xerus-master/`
-   - `projects/`, `shared/`, `shared/knowledge/`, `shared/inbox/`
-   - `data/`, `marketplace/`
+   - `projects/`, `drive/`
+   - `data/`, `data/archive/`, `data/dashboard/`, `marketplace/`
 
 4. Verify required files exist (report missing, do not fabricate content):
    - `CLAUDE.md` -- if missing, flag as CRITICAL (platform must re-provision)
@@ -81,7 +80,7 @@ marketplace/                           # Read-only skill/agent catalog
    - `agents/index.json` -- if missing, create empty: `{"agents":[]}`
    - `.memory/index.md` -- if missing, create with header: `# Memory Index\n`
    - `.beads/issues.jsonl` -- if missing, create empty file
-   - `shared/activity.jsonl` -- if missing, create empty file
+   - `data/activity.jsonl` -- if missing, create empty file
 
 ### Phase 3: Agent Validation
 
@@ -147,7 +146,7 @@ marketplace/                           # Read-only skill/agent catalog
 
 ## Rules
 
-- Never delete user data (agents/, projects/, .memory/ content, shared/)
+- Never delete user data (agents/, projects/, .memory/ content, drive/, data/)
 - Never modify CLAUDE.md content (platform-owned, only verify it exists)
 - Never fabricate agent soul files -- flag missing and suggest running agent-creation skill
 - Always commit .memory/ changes with descriptive messages

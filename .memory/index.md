@@ -7,7 +7,7 @@
 - [[user/preferences.md]] - Human preferences and communication style
 
 ## Company
-- `shared/knowledge/company.md` - **Source of truth** for company vision, mission, values, goals
+- `drive/company.md` - **Source of truth** for company vision, mission, values, goals
 - [[company/decisions.md]] - Architectural decisions log
 
 ## Entities

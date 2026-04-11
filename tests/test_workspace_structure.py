@@ -63,10 +63,20 @@ class TestWorkspaceBase:
         memory_dir = WORKSPACE_ROOT / ".memory"
         assert memory_dir.is_dir(), "Missing .memory/ directory"
 
-    def test_shared_directory_exists(self):
-        """Workspace has shared/ directory."""
-        shared_dir = WORKSPACE_ROOT / "shared"
-        assert shared_dir.is_dir(), "Missing shared/ directory"
+    def test_drive_directory_exists(self):
+        """Workspace has drive/ directory."""
+        drive_dir = WORKSPACE_ROOT / "drive"
+        assert drive_dir.is_dir(), "Missing drive/ directory"
+
+    def test_claude_rules_directory_exists(self):
+        """Workspace has .claude/rules/ directory."""
+        rules_dir = WORKSPACE_ROOT / ".claude" / "rules"
+        assert rules_dir.is_dir(), "Missing .claude/rules/ directory"
+
+    def test_data_directory_exists(self):
+        """Workspace has data/ directory."""
+        data_dir = WORKSPACE_ROOT / "data"
+        assert data_dir.is_dir(), "Missing data/ directory"
 
 
 class TestAgentsAtRoot:
@@ -221,23 +231,29 @@ class TestHooksExist:
         assert "SessionStart" in hooks, "Missing SessionStart hook config"
 
 
-class TestSharedResources:
-    """Verify shared workspace resources."""
+class TestDriveResources:
+    """Verify drive/ workspace resources."""
 
-    def test_shared_knowledge(self):
-        """shared/knowledge/ directory exists."""
-        knowledge = WORKSPACE_ROOT / "shared" / "knowledge"
-        assert knowledge.is_dir(), "Missing shared/knowledge/"
+    def test_drive_directory(self):
+        """drive/ directory exists."""
+        drive = WORKSPACE_ROOT / "drive"
+        assert drive.is_dir(), "Missing drive/"
 
     def test_company_md(self):
-        """shared/knowledge/company.md exists."""
-        company = WORKSPACE_ROOT / "shared" / "knowledge" / "company.md"
-        assert company.exists(), "Missing company.md"
+        """drive/company.md exists (may be generated at scaffold time)."""
+        company = WORKSPACE_ROOT / "drive" / "company.md"
+        # company.md is pre-seeded in template but may be regenerated at scaffold
+        assert company.exists(), "Missing drive/company.md"
 
     def test_activity_jsonl(self):
-        """shared/activity.jsonl exists or can be created."""
-        activity = WORKSPACE_ROOT / "shared" / "activity.jsonl"
+        """data/activity.jsonl exists or can be created."""
+        activity = WORKSPACE_ROOT / "data" / "activity.jsonl"
         # May not exist in clean template, that's OK
+
+    def test_claude_rules_directory(self):
+        """.claude/rules/ directory exists for policies."""
+        rules = WORKSPACE_ROOT / ".claude" / "rules"
+        assert rules.is_dir(), "Missing .claude/rules/"
 
 
 class TestWorkspaceBeads:

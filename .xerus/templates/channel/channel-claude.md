@@ -31,6 +31,6 @@
 | channel-manager | .claude/skills/channel-manager/SKILL.md | Standup, task distribution, cross-channel coordination |
 
 ## Cross-Channel
-- Read shared/knowledge/ for company-wide documents
+- Read drive/ for company-wide documents
 - Read project CLAUDE.md for OKRs this channel serves
 - Post daily summary to output/posts.jsonl

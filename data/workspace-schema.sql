@@ -857,3 +857,31 @@ CREATE TABLE IF NOT EXISTS schedule_runs (
 
 CREATE INDEX IF NOT EXISTS idx_schedule_runs_schedule ON schedule_runs(schedule_id);
 CREATE INDEX IF NOT EXISTS idx_schedule_runs_status ON schedule_runs(status);
+
+------------------------------------------------------------
+-- FILE CONNECTIONS & TAGS (drive content metadata)
+------------------------------------------------------------
+
+-- File connections: link files to agents, channels, or other files
+CREATE TABLE IF NOT EXISTS file_connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_path TEXT NOT NULL,
+    target_type TEXT NOT NULL CHECK(target_type IN ('agent', 'channel', 'file')),
+    target_ref TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    created_by TEXT,
+    UNIQUE(file_path, target_type, target_ref)
+);
+CREATE INDEX IF NOT EXISTS idx_fc_target ON file_connections(target_type, target_ref);
+CREATE INDEX IF NOT EXISTS idx_fc_file ON file_connections(file_path);
+
+-- File tags: user-defined labels on files
+CREATE TABLE IF NOT EXISTS file_tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_path TEXT NOT NULL,
+    tag TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    UNIQUE(file_path, tag)
+);
+CREATE INDEX IF NOT EXISTS idx_ft_tag ON file_tags(tag);
+CREATE INDEX IF NOT EXISTS idx_ft_file ON file_tags(file_path);

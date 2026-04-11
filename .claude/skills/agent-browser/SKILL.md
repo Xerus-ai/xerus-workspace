@@ -173,7 +173,7 @@ agent-browser snapshot -i
 
 ```bash
 # Read the local reference to get the URL
-# cat data/drive/{name}.gsheet | jq -r '.url'
+# cat drive/{name}.gsheet | jq -r '.url'
 agent-browser tab new "https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}"
 ```
 
@@ -183,7 +183,7 @@ Show completed work to the user via the browser pane:
 
 ```bash
 # HTML dashboard
-agent-browser open "file://$XERUS_WORKSPACE_ROOT/shared/dashboard/channel.html"
+agent-browser open "file://$XERUS_WORKSPACE_ROOT/data/dashboard/channel.html"
 
 # Local web app (if agent built one on a preview port)
 agent-browser open "http://localhost:3000"

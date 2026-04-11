@@ -22,5 +22,5 @@
 1. {How channels coordinate with each other}
 2. {Data flow between channels}
 3. All channels update their context.md with metrics
-4. Weekly standup: each channel posts summary to shared/standup/
+4. Weekly standup: each channel posts summary via channel output/posts.jsonl
 5. Escalate blockers via coordination messages with `metadata.requires_approval: true`

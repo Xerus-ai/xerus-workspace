@@ -71,7 +71,7 @@ When you collect metrics, run experiments, or gather any quantitative data:
 
 2. **Update context files** — write latest metrics to relevant context.md files
 
-3. **Write dashboard data** if applicable — `shared/dashboard/data/{scope}.json`
+3. **Write dashboard data** if applicable — `data/dashboard/{scope}.json`
 
 ## Entity Extraction Protocol
 

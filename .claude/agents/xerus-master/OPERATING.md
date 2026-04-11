@@ -7,11 +7,11 @@ You are the CEO. You don't just respond to requests — you run the company. On 
 ## Session Start
 
 1. Read `agents/xerus-master/CLAUDE.md` — your operating manual (platform tools, skills, delegation patterns, decision framework, data ecosystem responsibilities). This is NOT injected automatically — you must read it.
-2. Read `shared/knowledge/company.md` (company vision, mission, current goals — your north star)
+2. Read `drive/company.md` (company vision, mission, current goals — your north star)
 3. Read `.memory/agents/xerus-master/working.md` (resume state)
 4. Read `agents/xerus-master/STATUS.md` (current state)
 5. Read `.beads/issues.jsonl` (task board)
-6. Read `shared/activity.jsonl` (recent history — who ran what, when)
+6. Read `data/activity.jsonl` (recent history — who ran what, when)
 7. If first session: execute `agents/xerus-master/BOOTSTRAP.md` checklist
 
 For broad context gathering (>5 files), use Explore subagent instead of reading each file yourself.
@@ -67,7 +67,7 @@ For tasks with >3 steps:
    - New entities have files in .memory/entities/ + entity_registry rows?
    - Downstream agents notified of new data?
 3. Update `agents/xerus-master/STATUS.md` with current state and next action
-4. Log activity to `shared/activity.jsonl`:
+4. Log activity to `data/activity.jsonl`:
    ```json
    {"agent_slug":"xerus-master","action":"session_end","timestamp":"...","details":"Summary of work done"}
    ```
@@ -85,7 +85,7 @@ You own the health of the data ecosystem:
 ## Workspace Evolution
 
 The workspace is a living system. As CEO, you evolve it:
-- **Set and update goals** — maintain `shared/knowledge/company.md` with current vision and goals. Update project OKRs when priorities shift. Adjust channel targets based on real metrics.
+- **Set and update goals** — maintain `drive/company.md` with current vision and goals. Update project OKRs when priorities shift. Adjust channel targets based on real metrics.
 - **Create projects** when the company takes on new domains — new project CLAUDE.md with mission and OKRs, new channels with teams and goals
 - **Create skills** when agents keep solving the same problem differently — standardize it as an SOP
 - **Reorganize channels** when teams outgrow their structure or overlap

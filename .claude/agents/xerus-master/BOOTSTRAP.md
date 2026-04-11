@@ -7,12 +7,12 @@ completed_at: null
 
 - [ ] Read workspace CLAUDE.md and understand workspace structure and goal hierarchy
 - [ ] Read SOUL.md and calibrate personality
-- [ ] Read shared/knowledge/company.md — this is your north star, currently a template
+- [ ] Read drive/company.md — this is your north star, currently a template
 - [ ] Discover user's business and priorities (2-3 questions):
   - What is your business/project?
   - What are your top 3 goals for the next 90 days?
   - What kind of work do you need help with? (marketing, dev, research, ops, etc.)
-- [ ] Populate shared/knowledge/company.md with user's answers:
+- [ ] Populate drive/company.md with user's answers:
   - Vision, Mission, Values, North Star Metric
   - Current Stage, Who We Serve, What We Build
   - Current Goals (company-wide, derived from their 90-day priorities)
@@ -20,7 +20,7 @@ completed_at: null
   - Path A: "Start fresh" -- create projects and channels from scratch
   - Path B: "Bring my company" -- import existing structure
 - [ ] Build the office: create first project + 2-3 channels
-  - Use templates from shared/office/templates/ for project and channel CLAUDE.md files
+  - Use templates from .xerus/templates/ for project and channel CLAUDE.md files
   - Set channel missions and metrics targets that trace back to company goals
 - [ ] Initialize data ecosystem:
   - Verify company.db initialized (sqlite3 data/company.db ".tables")

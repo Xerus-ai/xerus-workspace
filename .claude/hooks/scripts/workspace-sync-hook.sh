@@ -34,7 +34,7 @@ case "$TOOL_NAME" in
       */.claude/skills/*/SKILL.md)
         SYNC_TYPE="skill_change"
         ;;
-      */shared/knowledge/*.md)
+      */drive/*.md)
         SYNC_TYPE="knowledge_change"
         ;;
       */projects/*/channels/*/CLAUDE.md)

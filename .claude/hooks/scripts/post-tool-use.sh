@@ -30,10 +30,10 @@ case "$TOOL_NAME" in
       TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
       if command -v jq &>/dev/null; then
         jq -n --arg event "file_write" --arg path "$FILE_PATH" --arg agent "$AGENT_SLUG" --arg ts "$TIMESTAMP" \
-          '{event: $event, path: $path, agent: $agent, timestamp: $ts}' >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"
+          '{event: $event, path: $path, agent: $agent, timestamp: $ts}' >> "$XERUS_WORKSPACE_ROOT/data/activity.jsonl"
       else
         SAFE_PATH=$(printf '%s' "$FILE_PATH" | sed 's/\\/\\\\/g; s/"/\\"/g')
-        echo "{\"event\":\"file_write\",\"path\":\"$SAFE_PATH\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$TIMESTAMP\"}" >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"
+        echo "{\"event\":\"file_write\",\"path\":\"$SAFE_PATH\",\"agent\":\"$AGENT_SLUG\",\"timestamp\":\"$TIMESTAMP\"}" >> "$XERUS_WORKSPACE_ROOT/data/activity.jsonl"
       fi
     fi
     ;;

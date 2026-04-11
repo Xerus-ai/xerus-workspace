@@ -1,6 +1,6 @@
 ---
 name: workspace-sync
-description: "Keep agent files in sync with their workspace environment. Update agent CLAUDE.md, BOOTSTRAP.md, HEARTBEAT.md, OPERATING.md, and channel CLAUDE.md when skills are installed or removed, knowledge docs change, or channel configs are updated. Use PROACTIVELY whenever: (1) skills are added or removed from .claude/skills/, (2) shared/knowledge/ docs are created, modified, or deleted, (3) channel CLAUDE.md files change, (4) agents are added or removed, (5) user says 'sync agents', 'update agent files', 'refresh workspace', or (6) after any scaffolding operation that adds or removes capabilities."
+description: "Keep agent files in sync with their workspace environment. Update agent CLAUDE.md, BOOTSTRAP.md, HEARTBEAT.md, OPERATING.md, and channel CLAUDE.md when skills are installed or removed, knowledge docs change, or channel configs are updated. Use PROACTIVELY whenever: (1) skills are added or removed from .claude/skills/, (2) drive/ docs are created, modified, or deleted, (3) channel CLAUDE.md files change, (4) agents are added or removed, (5) user says 'sync agents', 'update agent files', 'refresh workspace', or (6) after any scaffolding operation that adds or removes capabilities."
 ---
 
 # Workspace Sync
@@ -22,7 +22,7 @@ Build a complete picture of what exists right now:
 ls .claude/skills/*/SKILL.md -> list of installed skills with descriptions
 
 # Knowledge
-ls shared/knowledge/*.md -> list of knowledge docs
+ls drive/*.md -> list of knowledge docs
 
 # Channels + agents
 Read agents/index.json -> agent-channel map
@@ -30,7 +30,7 @@ Read agents/*/config.json -> agent details (channels, primary_channel)
 
 # What agents currently reference
 Grep "\.claude/skills/" agents/*/CLAUDE.md -> skill refs per agent
-Grep "shared/knowledge/" agents/*/CLAUDE.md -> knowledge refs per agent
+Grep "drive/" agents/*/CLAUDE.md -> knowledge refs per agent
 ```
 
 ### 2. Detect Drift
@@ -76,7 +76,7 @@ For each affected agent, update in order. **Full reconciliation** — add, updat
 **Knowledge section:**
 ```markdown
 ## Knowledge
-- shared/knowledge/{doc}.md
+- drive/{doc}.md
 ```
 - Add paths for new knowledge docs
 - Remove paths for deleted knowledge docs
@@ -89,7 +89,7 @@ For each affected agent, update in order. **Full reconciliation** — add, updat
 
 ```markdown
 - [ ] Read .claude/skills/{name}/SKILL.md
-- [ ] Read shared/knowledge/{doc}.md
+- [ ] Read drive/{doc}.md
 ```
 - Add read tasks for new skills/knowledge
 - Remove read tasks for deleted skills/knowledge
@@ -110,7 +110,7 @@ After sync, validate all references resolve:
 
 ```bash
 for slug in $(jq -r '.agents | keys[]' agents/index.json); do
-  grep -oP '\.claude/skills/[^\s|]+|shared/knowledge/[^\s]+' "agents/$slug/CLAUDE.md" | while read path; do
+  grep -oP '\.claude/skills/[^\s|]+|drive/[^\s]+' "agents/$slug/CLAUDE.md" | while read path; do
     test -e "$path" || echo "BROKEN: $slug -> $path"
   done
 done

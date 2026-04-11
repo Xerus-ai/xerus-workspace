@@ -55,7 +55,7 @@ Participants: {list of agents}
 
 For workspace-wide standup (growth channel responsibility):
 1. Read all channel standup files from `.channel/state/standups/`
-2. Synthesize into `shared/standup/{YYYY-MM-DD}.md`
+2. Synthesize into the growth channel's `output/posts.jsonl` with `message_type: "system"`
 
 ## Example
 

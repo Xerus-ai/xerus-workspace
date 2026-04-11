@@ -25,7 +25,8 @@ git clone --recursive https://github.com/xerus-ai/xerus-workspace.git
 - **Settings**: `.claude/settings.json` with SDK config
 - **Xerus Master identity**: SOUL.md, BOOTSTRAP.md, STATUS.md, config.json in `agents/xerus-master/`
 - **Memory structure**: `.memory/` with index and base files
-- **Shared spaces**: office, standup, knowledge, inbox
+- **Drive**: company knowledge documents in `drive/`
+- **Rules and templates**: `.claude/rules/`, `.xerus/templates/`
 - **Marketplace catalog**: Agent and skill definitions (via submodules)
 
 ## What's Dynamic (generated at scaffold time)

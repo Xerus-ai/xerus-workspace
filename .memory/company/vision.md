@@ -1,5 +1,5 @@
 # Company Vision
 
-> **Source of truth has moved to `shared/knowledge/company.md`**
+> **Source of truth has moved to `drive/company.md`**
 >
-> This file is kept for backward compatibility. Read `shared/knowledge/company.md` for company vision, mission, values, and current goals.
+> This file is kept for backward compatibility. Read `drive/company.md` for company vision, mission, values, and current goals.

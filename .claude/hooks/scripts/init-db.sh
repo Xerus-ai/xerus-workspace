@@ -113,3 +113,33 @@ migrate_workspace_db() {
   );" 2>/dev/null
 }
 migrate_workspace_db
+
+# --- File connections & tags migration (drive content metadata) ---
+migrate_file_metadata_tables() {
+  [ -f "$WORKSPACE_DB_PATH" ] || return 0
+
+  # file_connections table (added for drive content metadata)
+  sqlite3 "$WORKSPACE_DB_PATH" "CREATE TABLE IF NOT EXISTS file_connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_path TEXT NOT NULL,
+    target_type TEXT NOT NULL CHECK(target_type IN ('agent', 'channel', 'file')),
+    target_ref TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    created_by TEXT,
+    UNIQUE(file_path, target_type, target_ref)
+  );" 2>/dev/null
+  sqlite3 "$WORKSPACE_DB_PATH" "CREATE INDEX IF NOT EXISTS idx_fc_target ON file_connections(target_type, target_ref);" 2>/dev/null
+  sqlite3 "$WORKSPACE_DB_PATH" "CREATE INDEX IF NOT EXISTS idx_fc_file ON file_connections(file_path);" 2>/dev/null
+
+  # file_tags table (added for drive content metadata)
+  sqlite3 "$WORKSPACE_DB_PATH" "CREATE TABLE IF NOT EXISTS file_tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_path TEXT NOT NULL,
+    tag TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    UNIQUE(file_path, tag)
+  );" 2>/dev/null
+  sqlite3 "$WORKSPACE_DB_PATH" "CREATE INDEX IF NOT EXISTS idx_ft_tag ON file_tags(tag);" 2>/dev/null
+  sqlite3 "$WORKSPACE_DB_PATH" "CREATE INDEX IF NOT EXISTS idx_ft_file ON file_tags(file_path);" 2>/dev/null
+}
+migrate_file_metadata_tables

@@ -33,7 +33,7 @@ audit() {
         "$hook_name" "$agent" "$ts" >> "$XERUS_WORKSPACE_ROOT/.xerus/hook-audit.jsonl"
 }
 
-# Log an activity event to shared/activity.jsonl
+# Log an activity event to data/activity.jsonl
 # Usage: log_activity "event_name" "agent_slug"
 log_activity() {
     local event="$1"
@@ -45,7 +45,7 @@ log_activity() {
         ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     fi
     printf '{"event":"%s","agent":"%s","timestamp":"%s"}\n' \
-        "$event" "$agent" "$ts" >> "$XERUS_WORKSPACE_ROOT/shared/activity.jsonl"
+        "$event" "$agent" "$ts" >> "$XERUS_WORKSPACE_ROOT/data/activity.jsonl"
 }
 
 # Resolve agent's primary channel directory (relative to workspace root)

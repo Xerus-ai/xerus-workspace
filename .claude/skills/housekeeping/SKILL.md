@@ -1,6 +1,6 @@
 ---
 name: housekeeping
-description: Post-task workspace cleanup and health check. Clears temporary files, validates workspace cleanliness, checks .memory/ files are current, ACE reflections are up to date, knowledge indexes exist, shared/activity.jsonl is not bloated, and reports drift from expected workspace structure. Use after task completion, session end, or when asked to "clean up workspace", "run housekeeping", or "check workspace health".
+description: Post-task workspace cleanup and health check. Clears temporary files, validates workspace cleanliness, checks .memory/ files are current, ACE reflections are up to date, knowledge indexes exist, data/activity.jsonl is not bloated, and reports drift from expected workspace structure. Use after task completion, session end, or when asked to "clean up workspace", "run housekeeping", or "check workspace health".
 user-invocable: false
 allowed-tools: Read, Glob, Grep, Edit, Bash(ls *), Bash(find *), Bash(rm *), Bash(wc *), Bash(du *), Bash(cd .memory && git *), Bash(tail *), Bash(head *)
 ---
@@ -18,7 +18,7 @@ Keep the workspace lean, organized, and consistent.
    - Glob `**/scratch/**` -- remove all contents (scratch is disposable between sessions)
    - Glob `**/*.tmp`, `**/*.bak`, `**/*.swp`, `**/.DS_Store`
    - Glob `**/tmp/**` in project channel directories
-   - Do NOT remove files in `.memory/`, `agents/*/knowledge/`, or `shared/knowledge/`
+   - Do NOT remove files in `.memory/`, `agents/*/knowledge/`, or `drive/`
    - Log each file removed
 
 2. Check for oversized files (>10MB) that may be accidental:
@@ -29,11 +29,11 @@ Keep the workspace lean, organized, and consistent.
 
 ### Phase 2: Activity Log Maintenance
 
-3. Check `shared/activity.jsonl` size:
+3. Check `data/activity.jsonl` size:
    ```bash
-   wc -l shared/activity.jsonl
+   wc -l data/activity.jsonl
    ```
-   - If >1000 lines: trim to last 500 lines, archive older entries to `shared/archive/activity-{date}.jsonl`
+   - If >1000 lines: trim to last 500 lines, archive older entries to `data/archive/activity-{date}.jsonl`
    - If file does not exist: create empty file
 
 4. Check agent inbox directories for stale messages:
@@ -110,7 +110,7 @@ Keep the workspace lean, organized, and consistent.
 ## Rules
 
 - Never delete files in `.memory/` (only commit uncommitted changes)
-- Never delete files in `agents/*/knowledge/` or `shared/knowledge/`
+- Never delete files in `agents/*/knowledge/` or `drive/`
 - Never modify agent soul files (SOUL.md, system-prompt.md, etc.)
 - Always archive before deleting (activity logs, inbox messages)
 - scratch/ is always safe to clear entirely
