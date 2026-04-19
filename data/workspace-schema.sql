@@ -826,6 +826,7 @@ CREATE TABLE IF NOT EXISTS schedules (
     max_budget_usd REAL,
     allowed_tools TEXT,  -- JSON array of tool names
     system_prompt TEXT,
+    config TEXT,  -- JSON blob: UI-only schedule metadata (timezone, activeHours, weekdaysOnly, tokenBudget, etc.)
     next_run_at INTEGER,
     last_run_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
