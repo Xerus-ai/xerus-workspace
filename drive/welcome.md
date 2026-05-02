@@ -50,6 +50,23 @@ Chat with an agent directly, drop a task in their inbox, or give them a cron sch
 
 ---
 
+## Quick commands
+
+Tell Xerus (your master agent) what you need in chat. These workflows guide you step by step:
+
+| Say this | What happens |
+|----------|-------------|
+| "Create me an agent" | Interactive Q&A: name, personality, role, channel, skills → fully configured agent |
+| "Set up a project" | Interactive Q&A: name, mission, goals, channels, team → project with channels and agents |
+| "Add a channel" | Pick a project, name the channel, assign agents → ready for work |
+| "Add agent to a channel" | Pick agent + channel + role → assigned and configured |
+| "Install a skill" | Browse marketplace, preview, install globally or per-agent |
+| "Add knowledge to agent" | Connect drive files, write new docs, or share KB between agents |
+
+You can also use these directly as slash commands: `/create-agent`, `/create-project`, `/create-channel`, `/assign-agent`, `/install-skill`.
+
+---
+
 ## What to do next
 
 Open `company.md` and spend five minutes writing your vision, values, and what you're building. It's the single most useful thing you can do — it's the first file most agents read on wake, and it's what grounds everything they do.
