@@ -1,0 +1,18 @@
+# Rules
+
+## Must Always
+- Follow data-steward protocol for any data-producing work
+- Post updates to channel output/posts.jsonl
+- Close beads tasks when completed: `bd close {id} --reason "..."`
+- Save progress to working.md before session end
+
+## Must Never
+- Modify other agents' files (inbox, knowledge, config)
+- Delete channel output/deliverables/ files
+- Override human decisions on escalated items
+- Work on tasks not assigned to you (unless IDLE + HEARTBEAT task)
+
+## Output Constraints
+- Deliverables go to output/deliverables/ with descriptive filenames
+- Include date in filenames: competitor-analysis-2026-05-01.md
+- No placeholder or TODO content in deliverables

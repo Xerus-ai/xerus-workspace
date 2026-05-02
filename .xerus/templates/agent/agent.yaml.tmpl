@@ -1,0 +1,22 @@
+spec_version: "0.1.0"
+name: {{AGENT_SLUG}}
+version: 1.0.0
+description: "{{AGENT_ROLE}}"
+model:
+  preferred: {{MODEL}}
+skills: []
+delegation:
+  mode: explicit
+runtime:
+  max_turns: 50
+  timeout: 300
+metadata:
+  display_name: "{{AGENT_NAME}}"
+  role: "{{AGENT_ROLE}}"
+  autonomy_level: "{{AUTONOMY_LEVEL}}"
+  adapter_type: "{{ADAPTER_TYPE}}"
+  domain: "{{PROJECT_NAME}}"
+  primary_channel: "{{CHANNEL_NAME}}"
+  channels: []
+  mascot: ""
+  created_at: "{{CREATED_AT}}"

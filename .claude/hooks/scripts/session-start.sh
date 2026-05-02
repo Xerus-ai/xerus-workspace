@@ -57,6 +57,20 @@ No previous session state.
 WORKING
 fi
 
+# Ensure .agent/skills/ → .claude/skills symlink for openskills compatibility (Linux/Daytona only)
+AGENT_SKILLS_DIR="$XERUS_WORKSPACE_ROOT/.agent/skills"
+CLAUDE_SKILLS_DIR="$XERUS_WORKSPACE_ROOT/.claude/skills"
+if [ -d "$AGENT_SKILLS_DIR" ] && [ ! -L "$CLAUDE_SKILLS_DIR" ] && [ ! -d "$CLAUDE_SKILLS_DIR" ]; then
+  ln -s "../.agent/skills" "$CLAUDE_SKILLS_DIR" 2>/dev/null || true
+elif [ -d "$AGENT_SKILLS_DIR" ] && [ -d "$CLAUDE_SKILLS_DIR" ] && [ ! -L "$CLAUDE_SKILLS_DIR" ]; then
+  # .claude/skills/ exists as a real dir with content — migrate to .agent/skills/
+  if [ -z "$(ls -A "$AGENT_SKILLS_DIR" 2>/dev/null | grep -v .gitkeep)" ]; then
+    cp -r "$CLAUDE_SKILLS_DIR"/* "$AGENT_SKILLS_DIR/" 2>/dev/null || true
+    rm -rf "$CLAUDE_SKILLS_DIR"
+    ln -s "../.agent/skills" "$CLAUDE_SKILLS_DIR" 2>/dev/null || true
+  fi
+fi
+
 # Cache channel path for other hooks to reuse
 if [ -n "$AGENT_DIR" ] && [ -d "$AGENT_DIR" ]; then
   CHANNEL_REL=$(resolve_channel_dir "$AGENT_SLUG")
@@ -87,3 +101,22 @@ Task context generation failed. Check hook logs.
 Read your CLAUDE.md and working.md for self-directed work.
 ERRCTX
 }
+
+# Append recent shift handoff from previous agent (if any)
+if [ -n "$AGENT_DIR" ] && [ -f "$AGENT_DIR/.channel-path" ]; then
+  CHANNEL_REL=$(cat "$AGENT_DIR/.channel-path" 2>/dev/null)
+  if [ -n "$CHANNEL_REL" ]; then
+    HANDOFF_DIR="$XERUS_WORKSPACE_ROOT/$CHANNEL_REL/.channel/state/handoffs"
+    if [ -d "$HANDOFF_DIR" ]; then
+      LATEST_HANDOFF=$(ls -t "$HANDOFF_DIR/"*.md 2>/dev/null | head -1)
+      if [ -n "$LATEST_HANDOFF" ]; then
+        {
+          echo ""
+          echo "## Handoff from Previous Shift"
+          echo ""
+          cat "$LATEST_HANDOFF"
+        } >> "$TASK_CONTEXT"
+      fi
+    fi
+  fi
+fi

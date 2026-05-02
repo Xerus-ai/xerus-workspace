@@ -3,9 +3,10 @@
 # Fires on Write/Edit. Detects sync-relevant file writes and performs
 # side-effects that MUST happen reliably (not via agent instructions).
 #
-# Two patterns:
-#   1. agents/{slug}/config.json → scaffold soul files, memory, index, workspace.db
+# Three patterns:
+#   1. agents/{slug}/config.json OR agent.yaml → scaffold soul files, memory, index, workspace.db
 #   2. projects/{domain}/channels/{channel}/CLAUDE.md → scaffold channel dirs, workspace.db
+#   3. .agent/skills/*/SKILL.md → regenerate AGENTS.md
 #
 # Event: PostToolUse
 # Matcher: Write|Edit
@@ -65,9 +66,9 @@ validate_field() {
 }
 
 # ─────────────────────────────────────────────────────────────────────
-# Pattern 1: Agent created — agents/{slug}/config.json
+# Pattern 1: Agent created — agents/{slug}/config.json OR agent.yaml
 # ─────────────────────────────────────────────────────────────────────
-if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/config\.json$ ]]; then
+if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/(config\.json|agent\.yaml)$ ]]; then
   NEW_SLUG="${BASH_REMATCH[1]}"
   AGENT_DIR="$XERUS_WORKSPACE_ROOT/agents/$NEW_SLUG"
 
@@ -76,7 +77,7 @@ if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/config\.json$ ]]; then
 
   audit "ScaffoldSync:agent_create:$NEW_SLUG"
 
-  # Read agent metadata from config.json — validate every field before use
+  # Read agent metadata from config.json or agent.yaml — validate every field before use
   AGENT_NAME="$NEW_SLUG"
   AGENT_ROLE="specialist"
   AGENT_MODEL="sonnet"
@@ -97,6 +98,18 @@ if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/config\.json$ ]]; then
     validate_field "$_channel" && AGENT_CHANNEL="$_channel"
     validate_field "$_project" && AGENT_PROJECT="$_project"
     validate_field "$_autonomy" && AGENT_AUTONOMY="$_autonomy"
+  elif [ -f "$AGENT_DIR/agent.yaml" ]; then
+    # Fallback: read gitagent-protocol agent.yaml with simple line parsing
+    while IFS= read -r line; do
+      case "$line" in
+        "  display_name:"*) _val="${line#*: }"; _val="${_val//\"/}"; validate_field "$_val" && [ -n "$_val" ] && AGENT_NAME="$_val" ;;
+        "  role:"*) _val="${line#*: }"; _val="${_val//\"/}"; validate_field "$_val" && AGENT_ROLE="$_val" ;;
+        "  preferred:"*) _val="${line#*: }"; _val="${_val//\"/}"; validate_field "$_val" && AGENT_MODEL="$_val" ;;
+        "  primary_channel:"*) _val="${line#*: }"; _val="${_val//\"/}"; validate_field "$_val" && AGENT_CHANNEL="$_val" ;;
+        "  domain:"*) _val="${line#*: }"; _val="${_val//\"/}"; validate_field "$_val" && AGENT_PROJECT="$_val" ;;
+        "  autonomy_level:"*) _val="${line#*: }"; _val="${_val//\"/}"; validate_field "$_val" && AGENT_AUTONOMY="$_val" ;;
+      esac
+    done < "$AGENT_DIR/agent.yaml"
   fi
 
   CHANNEL_PATH=""
@@ -151,6 +164,16 @@ if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/config\.json$ ]]; then
   scaffold_from_template "$AGENT_DIR/HEARTBEAT.md" "$TEMPLATE_DIR/HEARTBEAT.md.tmpl"
   scaffold_from_template "$AGENT_DIR/CLAUDE.md" "$TEMPLATE_DIR/CLAUDE.md.tmpl"
 
+  # Scaffold gitagent-protocol files (v3 templates)
+  scaffold_from_template "$AGENT_DIR/agent.yaml" "$TEMPLATE_DIR/agent.yaml.tmpl"
+  scaffold_from_template "$AGENT_DIR/OPERATING.md" "$TEMPLATE_DIR/OPERATING.md.tmpl"
+  scaffold_from_template "$AGENT_DIR/RULES.md" "$TEMPLATE_DIR/RULES.md.tmpl"
+
+  # Create knowledge + examples directories with init files
+  mkdir -p "$AGENT_DIR/knowledge" "$AGENT_DIR/examples"
+  scaffold_from_template "$AGENT_DIR/knowledge/index.yaml" "$TEMPLATE_DIR/knowledge-index.yaml.tmpl"
+  scaffold_from_template "$AGENT_DIR/examples/good-outputs.md" "$TEMPLATE_DIR/good-outputs.md.tmpl"
+
   # Create memory directories
   MEMORY_DIR="$XERUS_WORKSPACE_ROOT/.memory/agents/$NEW_SLUG"
   mkdir -p "$MEMORY_DIR"
@@ -201,11 +224,25 @@ if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/config\.json$ ]]; then
       2>/dev/null
   fi
 
+  # Register HEARTBEAT.md schedules in workspace.db
+  HEARTBEAT_FILE="$AGENT_DIR/HEARTBEAT.md"
+  HOOK_DIR="$(dirname "$0")"
+  if [ -f "$HEARTBEAT_FILE" ]; then
+    $PYTHON "$HOOK_DIR/register-heartbeat-schedules.py" \
+      "$NEW_SLUG" "$HEARTBEAT_FILE" "$XERUS_WORKSPACE_ROOT" 2>&1 || true
+  fi
+
+  # Regenerate AGENTS.md to include the new agent
+  SYNC_SCRIPT="$XERUS_WORKSPACE_ROOT/.xerus/runner/sync-agents-md.py"
+  if [ -f "$SYNC_SCRIPT" ]; then
+    $PYTHON "$SYNC_SCRIPT" "$XERUS_WORKSPACE_ROOT" 2>&1 || true
+  fi
+
   log_activity "agent_scaffolded" "$AGENT_SLUG"
 
   # Talk back — hook output is visible to the agent
   if [ ${#SCAFFOLDED[@]} -gt 0 ]; then
-    echo "Agent '$NEW_SLUG' scaffolded: ${SCAFFOLDED[*]}, memory, inbox, index.json, workspace.db"
+    echo "Agent '$NEW_SLUG' scaffolded: ${SCAFFOLDED[*]}, memory, inbox, index.json, workspace.db, AGENTS.md"
   else
     echo "Agent '$NEW_SLUG' already scaffolded (all files exist)"
   fi
@@ -256,6 +293,24 @@ if [[ "$REL_PATH" =~ ^projects/([a-zA-Z0-9._-]+)/channels/([a-zA-Z0-9._-]+)/CLAU
   log_activity "channel_scaffolded" "$AGENT_SLUG"
 
   echo "Channel '$DOMAIN_SLUG/$CHANNEL_SLUG' initialized: output/, scratch/, data/, .beads/, posts.jsonl, workspace.db"
+  exit 0
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# Pattern 3: Skill installed/removed — .agent/skills/*/SKILL.md
+# ─────────────────────────────────────────────────────────────────────
+if [[ "$REL_PATH" =~ ^\.agent/skills/([a-zA-Z0-9._-]+)/SKILL\.md$ ]]; then
+  SKILL_SLUG="${BASH_REMATCH[1]}"
+  audit "ScaffoldSync:skill_change:$SKILL_SLUG"
+
+  # Regenerate AGENTS.md to reflect skill registry changes
+  SYNC_SCRIPT="$XERUS_WORKSPACE_ROOT/.xerus/runner/sync-agents-md.py"
+  if [ -f "$SYNC_SCRIPT" ]; then
+    $PYTHON "$SYNC_SCRIPT" "$XERUS_WORKSPACE_ROOT" 2>&1 || true
+  fi
+
+  log_activity "skill_changed" "$AGENT_SLUG"
+  echo "Skill '$SKILL_SLUG' changed, AGENTS.md regenerated"
   exit 0
 fi
 

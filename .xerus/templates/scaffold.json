@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "description": "Scaffold configuration for dynamic workspace creation",
+  "version": "3.0.0",
+  "description": "Scaffold configuration for dynamic workspace creation. Supports gitagent-protocol + openskills standards.",
 
   "project": {
     "files": [
@@ -40,18 +40,32 @@
       {"template": "HEARTBEAT.md.tmpl", "target": "HEARTBEAT.md"},
       {"template": "RELATIONSHIPS.md.tmpl", "target": "RELATIONSHIPS.md"},
       {"template": "USER.md.tmpl", "target": "USER.md"},
-      {"template": "config.json.tmpl", "target": "config.json"}
+      {"template": "config.json.tmpl", "target": "config.json"},
+      {"template": "agent.yaml.tmpl", "target": "agent.yaml"},
+      {"template": "OPERATING.md.tmpl", "target": "OPERATING.md"},
+      {"template": "RULES.md.tmpl", "target": "RULES.md"}
     ],
     "directories": [
       "inbox/processed",
       "data",
       "knowledge",
-      "playbooks"
+      "playbooks",
+      "examples"
+    ],
+    "init_files": [
+      {"path": "knowledge/index.yaml", "template": "knowledge-index.yaml.tmpl"},
+      {"path": "examples/good-outputs.md", "template": "good-outputs.md.tmpl"}
     ],
     "memory_files": [
       {"path": "working.md", "content": "# Working State\n\n(no active work yet)\n"},
       {"path": "expertise.md", "content": "# Expertise\n\n(learned skills will be recorded here)\n"}
     ]
+  },
+
+  "skills": {
+    "directory": ".agent/skills",
+    "symlink": ".claude/skills",
+    "description": "openskills standard location with Claude Code symlink compatibility"
   },
 
   "variables": {

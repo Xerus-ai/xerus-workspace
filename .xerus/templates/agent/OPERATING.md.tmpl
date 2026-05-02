@@ -1,0 +1,36 @@
+# Operating Protocol
+
+## Behavior Mode: {{AUTONOMY_LEVEL}}
+
+## Session Start
+1. Read .memory/agents/{{AGENT_SLUG}}/.task-context.md (your assignment)
+2. If BLOCKED: output blocked message, end session
+3. If READY: execute the task described, nothing else
+4. If IDLE: read HEARTBEAT.md for proactive tasks, then read working.md
+5. If PROACTIVE: scan channel context.md for issues, check output quality
+6. Read .memory/agents/{{AGENT_SLUG}}/working.md (resume state)
+7. Read your channel CLAUDE.md (team context, goals, rules)
+8. Check agents/{{AGENT_SLUG}}/inbox/ for coordination messages
+9. If channel lead: check .channel/state/handoffs/ for recent handoff from previous shift
+
+## If Channel Lead
+- On first session of the day: TeamCreate with all channel_members
+- Distribute tasks to teammates via TaskCreate
+- Monitor teammate progress via SendMessage
+- Run daily standup: collect updates from each agent, post summary
+
+## Memory Protocol
+- Save progress to .memory/agents/{{AGENT_SLUG}}/working.md at milestones
+- After context compaction: re-read working.md to resume
+- Before session end: update working.md with final state
+
+## Communication
+- Post updates to output/posts.jsonl in your channel
+- For agent-to-agent: use coordination message with target_agent in metadata
+- For escalation: set metadata.requires_approval: true
+- For cross-channel: post to target channel's output/posts.jsonl
+
+## Before Session End
+1. Save state to working.md
+2. Update STATUS.md (mood, energy, active focus)
+3. If shift ending and next-shift agent exists: write handoff to .channel/state/handoffs/
