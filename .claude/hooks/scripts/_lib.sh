@@ -68,23 +68,22 @@ resolve_channel_dir() {
     if [ -f "$config_file" ]; then
         local primary_channel
         primary_channel=$($PYTHON -c "
-import json, sys
+import json, sys, glob, os
 try:
-    with open('$config_file') as f:
+    with open(sys.argv[1]) as f:
         config = json.load(f)
     pc = config.get('primary_channel', '')
     domain = config.get('domain', '')
+    ws = sys.argv[2]
     if pc and domain:
-        print(f'projects/{domain}/channels/{pc}')
+        print('projects/' + domain + '/channels/' + pc)
     elif pc:
-        # Search for channel if domain not specified
-        import glob
-        matches = glob.glob('$XERUS_WORKSPACE_ROOT/projects/*/channels/' + pc)
+        matches = glob.glob(ws + '/projects/*/channels/' + pc)
         if matches:
-            print(matches[0].replace('$XERUS_WORKSPACE_ROOT/', ''))
+            print(os.path.relpath(matches[0], ws))
 except Exception:
     pass
-" 2>/dev/null)
+" "$config_file" "$XERUS_WORKSPACE_ROOT" 2>/dev/null)
         echo "$primary_channel"
         return
     fi

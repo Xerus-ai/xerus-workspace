@@ -85,12 +85,14 @@ if [[ "$REL_PATH" =~ ^agents/([a-zA-Z0-9._-]+)/(config\.json|agent\.yaml)$ ]]; t
   AGENT_PROJECT=""
   AGENT_AUTONOMY="supervised"
   if command -v jq &>/dev/null && [ -f "$AGENT_DIR/config.json" ]; then
-    _name=$(jq -r '.name // empty' "$AGENT_DIR/config.json" 2>/dev/null)
-    _role=$(jq -r '.role // "specialist"' "$AGENT_DIR/config.json" 2>/dev/null)
-    _model=$(jq -r '.model // "sonnet"' "$AGENT_DIR/config.json" 2>/dev/null)
-    _channel=$(jq -r '.primary_channel // empty' "$AGENT_DIR/config.json" 2>/dev/null)
-    _project=$(jq -r '.domain // .project // empty' "$AGENT_DIR/config.json" 2>/dev/null)
-    _autonomy=$(jq -r '.autonomy_level // .autonomy // "supervised"' "$AGENT_DIR/config.json" 2>/dev/null)
+    IFS=$'\t' read -r _name _role _model _channel _project _autonomy < <(jq -r '[
+      (.name // ""),
+      (.role // "specialist"),
+      (.model // "sonnet"),
+      (.primary_channel // ""),
+      (.domain // .project // ""),
+      (.autonomy_level // .autonomy // "supervised")
+    ] | @tsv' "$AGENT_DIR/config.json" 2>/dev/null)
 
     validate_field "$_name" && [ -n "$_name" ] && AGENT_NAME="$_name"
     validate_field "$_role" && AGENT_ROLE="$_role"
