@@ -131,7 +131,7 @@ def register_schedules(db_path: Path, agent_slug: str, entries: list[dict]):
     cursor = conn.cursor()
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS schedules (
+        CREATE TABLE IF NOT EXISTS heartbeat_schedules (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             agent_slug TEXT NOT NULL,
             cron_expression TEXT NOT NULL,
@@ -150,14 +150,15 @@ def register_schedules(db_path: Path, agent_slug: str, entries: list[dict]):
     for entry in entries:
         try:
             cursor.execute(
-                """INSERT OR IGNORE INTO schedules
+                """INSERT OR IGNORE INTO heartbeat_schedules
                    (agent_slug, cron_expression, task_description, source, next_run_at)
                    VALUES (?, ?, ?, 'heartbeat', ?)""",
                 (agent_slug, entry["cron"], entry["task"], now),
             )
             if cursor.rowcount > 0:
                 inserted += 1
-        except sqlite3.Error:
+        except sqlite3.Error as e:
+            print(f"WARN: Failed to insert schedule for {agent_slug}: {e}", file=sys.stderr)
             continue
 
     conn.commit()

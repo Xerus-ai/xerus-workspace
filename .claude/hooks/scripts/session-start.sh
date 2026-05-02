@@ -65,9 +65,10 @@ if [ -d "$AGENT_SKILLS_DIR" ] && [ ! -L "$CLAUDE_SKILLS_DIR" ] && [ ! -d "$CLAUD
 elif [ -d "$AGENT_SKILLS_DIR" ] && [ -d "$CLAUDE_SKILLS_DIR" ] && [ ! -L "$CLAUDE_SKILLS_DIR" ]; then
   # .claude/skills/ exists as a real dir with content — migrate to .agent/skills/
   if [ -z "$(ls -A "$AGENT_SKILLS_DIR" 2>/dev/null | grep -v .gitkeep)" ]; then
-    cp -r "$CLAUDE_SKILLS_DIR"/* "$AGENT_SKILLS_DIR/" 2>/dev/null || true
-    rm -rf "$CLAUDE_SKILLS_DIR"
-    ln -s "../.agent/skills" "$CLAUDE_SKILLS_DIR" 2>/dev/null || true
+    if cp -r "$CLAUDE_SKILLS_DIR"/. "$AGENT_SKILLS_DIR/" 2>/dev/null; then
+      rm -rf "$CLAUDE_SKILLS_DIR"
+      ln -s "../.agent/skills" "$CLAUDE_SKILLS_DIR" 2>/dev/null || true
+    fi
   fi
 fi
 
