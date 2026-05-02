@@ -115,6 +115,16 @@ def main():
     content = generate_handoff(agent_slug, working_content, recent_posts)
     handoff_path.write_text(content, encoding="utf-8")
 
+    # Retain only the latest 10 handoffs per agent
+    import glob as glob_mod
+    pattern = str(handoff_dir / f"handoff-{agent_slug}-*.md")
+    existing = sorted(glob_mod.glob(pattern), reverse=True)
+    for old_file in existing[10:]:
+        try:
+            Path(old_file).unlink()
+        except OSError:
+            pass
+
     print(f"Handoff written: {filename}")
 
 

@@ -68,6 +68,7 @@
     "description": "openskills standard location with Claude Code symlink compatibility"
   },
 
+  "_variables_note": "Schema below is documentation-only. Actual substitution happens in scaffold-sync-hook.sh and workspace-scaffold.service.ts.",
   "variables": {
     "PROJECT_NAME": {"required": true, "type": "string"},
     "PROJECT_MISSION": {"required": true, "type": "string"},
