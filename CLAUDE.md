@@ -34,7 +34,8 @@ agents/{your-slug}/BOOTSTRAP.md         First-session onboarding checklist
 .xerus/templates/                       Workspace templates and resources
 data/activity.jsonl                     Execution log (who ran what, when)
 data/dashboard/                         Dashboard data and metrics
-data/company.db                         Company-wide structured data (SQLite)
+data/company.db                         Business data (research, prospects, metrics — SQLite)
+data/workspace.db                       Operational data (agents, channels, execution, tasks, inbox — SQLite)
 marketplace/                            Read-only skill/agent catalog
 ```
 
@@ -170,7 +171,10 @@ Three-layer storage model. All agents follow the `data-steward` skill protocol.
 | Layer | Storage | Purpose |
 |-------|---------|---------|
 | **1. Google Sheets/Drive** | Google Workspace | Raw data, human-readable |
-| **2. company.db (SQLite)** | `data/company.db` | Structured, queryable, cross-agent |
+| **2a. company.db (SQLite)** | `data/company.db` | Business data: research, prospects, competitors, metrics |
+| **2b. workspace.db (SQLite)** | `data/workspace.db` | Operational data: agents, channels, execution, tasks, inbox |
 | **3. .memory/entities/** | Git-tracked files | Rich context, backlinked knowledge graph |
 
 After ANY data-producing activity: persist to company.db, create entity files, notify downstream agents. See `.claude/skills/data-steward/SKILL.md` for tables, SQL, entity templates, and the full protocol.
+
+**Database boundary**: `company.db` is for business data agents produce (research reports, prospects, metrics). `workspace.db` is for operational state (agents, domains, channels, channel_members, execution sessions, tasks, inbox). When creating channels or managing agents, always use `workspace.db`.

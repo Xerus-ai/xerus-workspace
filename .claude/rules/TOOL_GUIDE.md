@@ -100,7 +100,7 @@ Write agents/research-rachel/agent.md
 2. Register the agent in the workspace database:
 
 ```bash
-sqlite3 data/company.db "INSERT INTO agents (slug, name, adapter_type, role, autonomy_level, status, config)
+sqlite3 data/workspace.db "INSERT INTO agents (slug, name, adapter_type, role, autonomy_level, status, config)
   VALUES ('research-rachel', 'Research Rachel', 'claudecode', 'research', 'supervised', 'idle',
   '{\"model\": \"claude-sonnet-4.5\", \"temperature\": 0.5}');"
 ```
@@ -155,7 +155,7 @@ Edit agents/research-rachel/config.json
 Also update the database record to stay in sync:
 
 ```bash
-sqlite3 data/company.db "UPDATE agents SET autonomy_level = 'autonomous',
+sqlite3 data/workspace.db "UPDATE agents SET autonomy_level = 'autonomous',
   config = json_set(config, '$.model', 'claude-opus-4'),
   updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
   WHERE slug = 'research-rachel';"
@@ -249,7 +249,7 @@ touch .memory/agents/research-rachel-v2/expertise.md
 5. Register the clone in the database:
 
 ```bash
-sqlite3 data/company.db "INSERT INTO agents (slug, name, adapter_type, role, autonomy_level, status, config)
+sqlite3 data/workspace.db "INSERT INTO agents (slug, name, adapter_type, role, autonomy_level, status, config)
   SELECT 'research-rachel-v2', 'Research Rachel V2', adapter_type, role, autonomy_level, 'idle', config
   FROM agents WHERE slug = 'research-rachel';"
 ```
@@ -269,7 +269,7 @@ Remove the agent directory, its memory, and its database records.
 1. Remove from database first (cascades to related tables):
 
 ```bash
-sqlite3 data/company.db "DELETE FROM agents WHERE slug = 'research-rachel';"
+sqlite3 data/workspace.db "DELETE FROM agents WHERE slug = 'research-rachel';"
 ```
 
 2. Remove filesystem artifacts:
@@ -321,7 +321,7 @@ The `agents/index.json` file contains a quick-reference map:
 For database-level listing with status:
 
 ```bash
-sqlite3 data/company.db "SELECT slug, name, status, autonomy_level FROM agents ORDER BY slug;"
+sqlite3 data/workspace.db "SELECT slug, name, status, autonomy_level FROM agents ORDER BY slug;"
 ```
 
 ---
@@ -389,7 +389,7 @@ Write agents/research-rachel/knowledge/competitor-landscape-2026.md
 **Register in database for cross-agent discovery:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO agent_knowledge_bases (agent_slug, kb_id, access_level)
+sqlite3 data/workspace.db "INSERT INTO agent_knowledge_bases (agent_slug, kb_id, access_level)
   VALUES ('research-rachel', 'competitor-landscape-2026', 'read');"
 ```
 
@@ -424,7 +424,7 @@ cp agents/research-rachel/knowledge/* agents/content-chris/knowledge/
 **Register the assignment in the database:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO agent_knowledge_bases (agent_slug, kb_id, access_level)
+sqlite3 data/workspace.db "INSERT INTO agent_knowledge_bases (agent_slug, kb_id, access_level)
   VALUES ('content-chris', 'competitor-landscape-2026', 'read');"
 ```
 
@@ -436,7 +436,7 @@ sqlite3 data/company.db "INSERT INTO agent_knowledge_bases (agent_slug, kb_id, a
 
 Channels are stored in the `channels` table of the workspace database. They live under domains (organizational units).
 
-**Database:** `data/company.db`
+**Database:** `data/workspace.db`
 **Tables:** `domains`, `channels`
 
 **Steps:**
@@ -444,14 +444,14 @@ Channels are stored in the `channels` table of the workspace database. They live
 1. Ensure the domain exists (create if needed):
 
 ```bash
-sqlite3 data/company.db "INSERT OR IGNORE INTO domains (slug, name, description)
+sqlite3 data/workspace.db "INSERT OR IGNORE INTO domains (slug, name, description)
   VALUES ('marketing', 'Marketing', 'Marketing department');"
 ```
 
 2. Create the channel:
 
 ```bash
-sqlite3 data/company.db "INSERT INTO channels (slug, name, domain_slug, lead_agent_slug, description, goals)
+sqlite3 data/workspace.db "INSERT INTO channels (slug, name, domain_slug, lead_agent_slug, description, goals)
   VALUES (
     'content-strategy',
     'Content Strategy',
@@ -495,13 +495,13 @@ Write projects/marketing/channels/content-strategy/CLAUDE.md
 
 Insert a record into the `channel_members` table.
 
-**Database:** `data/company.db`
+**Database:** `data/workspace.db`
 **Table:** `channel_members`
 
 **Example:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO channel_members (channel_slug, agent_slug, role)
+sqlite3 data/workspace.db "INSERT INTO channel_members (channel_slug, agent_slug, role)
   VALUES ('content-strategy', 'research-rachel', 'member');"
 ```
 
@@ -510,7 +510,7 @@ sqlite3 data/company.db "INSERT INTO channel_members (channel_slug, agent_slug, 
 **List current channel members:**
 
 ```bash
-sqlite3 data/company.db "SELECT cm.agent_slug, cm.role, a.name
+sqlite3 data/workspace.db "SELECT cm.agent_slug, cm.role, a.name
   FROM channel_members cm
   JOIN agents a ON cm.agent_slug = a.slug
   WHERE cm.channel_slug = 'content-strategy';"
@@ -572,7 +572,7 @@ Focus on pricing models, feature comparison, and market positioning.
 **Also register in the database for queryability:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO inbox_items (agent_slug, sender_slug, message_type, subject, content, priority)
+sqlite3 data/workspace.db "INSERT INTO inbox_items (agent_slug, sender_slug, message_type, subject, content, priority)
   VALUES ('research-rachel', 'xerus-master', 'task', 'Deep dive on competitor pricing',
   'Perform a deep competitive analysis...', 'high');"
 ```
@@ -654,7 +654,7 @@ Write marketplace/skills/social-listening/xerushub.json
 **Register in the database:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO skills (slug, name, version, source, source_ref, description, categories)
+sqlite3 data/workspace.db "INSERT INTO skills (slug, name, version, source, source_ref, description, categories)
   VALUES ('social-listening', 'Social Listening', '1.0.0', 'local',
   'marketplace/skills/social-listening', 'Monitor social media for brand mentions',
   '[\"research\", \"social-media\"]');"
@@ -695,7 +695,7 @@ Grep pattern: '"social-media"'
 **Example -- search installed skills in the database:**
 
 ```bash
-sqlite3 data/company.db "SELECT slug, name, version, description FROM skills WHERE categories LIKE '%research%';"
+sqlite3 data/workspace.db "SELECT slug, name, version, description FROM skills WHERE categories LIKE '%research%';"
 ```
 
 ---
@@ -716,7 +716,7 @@ The SDK auto-discovers skills in `.claude/skills/` and makes them available to a
 **Option B -- Assign a skill to a specific agent:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO agent_skills (agent_slug, skill_slug, enabled)
+sqlite3 data/workspace.db "INSERT INTO agent_skills (agent_slug, skill_slug, enabled)
   VALUES ('research-rachel', 'social-listening', 1);"
 ```
 
@@ -817,7 +817,7 @@ Firecrawl scan on 2026-04-03
 **After writing memory, log the change:**
 
 ```bash
-sqlite3 data/company.db "INSERT INTO memory_evolution_log (agent_slug, memory_path, operation, change_summary)
+sqlite3 data/workspace.db "INSERT INTO memory_evolution_log (agent_slug, memory_path, operation, change_summary)
   VALUES ('research-rachel', '.memory/entities/companies/platform-a.md', 'create', 'New competitor entity discovered');"
 ```
 
@@ -871,14 +871,14 @@ MCP call: get_status
 For local agent status from the database:
 
 ```bash
-sqlite3 data/company.db "SELECT slug, name, status, autonomy_level FROM agents ORDER BY status, slug;"
+sqlite3 data/workspace.db "SELECT slug, name, status, autonomy_level FROM agents ORDER BY status, slug;"
 ```
 
 For execution session status:
 
 ```bash
-sqlite3 data/company.db "SELECT * FROM v_active_sessions;"
-sqlite3 data/company.db "SELECT * FROM v_agent_workload;"
+sqlite3 data/workspace.db "SELECT * FROM v_active_sessions;"
+sqlite3 data/workspace.db "SELECT * FROM v_agent_workload;"
 ```
 
 ---
@@ -887,17 +887,17 @@ sqlite3 data/company.db "SELECT * FROM v_agent_workload;"
 
 Query domains from the workspace database.
 
-**Database:** `data/company.db`
+**Database:** `data/workspace.db`
 **Table:** `domains`
 
 ```bash
-sqlite3 data/company.db "SELECT slug, name, description FROM domains ORDER BY slug;"
+sqlite3 data/workspace.db "SELECT slug, name, description FROM domains ORDER BY slug;"
 ```
 
 **With channels:**
 
 ```bash
-sqlite3 data/company.db "SELECT d.slug as domain, d.name as domain_name, c.slug as channel, c.name as channel_name, c.lead_agent_slug
+sqlite3 data/workspace.db "SELECT d.slug as domain, d.name as domain_name, c.slug as channel, c.name as channel_name, c.lead_agent_slug
   FROM domains d
   LEFT JOIN channels c ON d.slug = c.domain_slug
   ORDER BY d.slug, c.slug;"
@@ -956,7 +956,7 @@ Grep pattern: "thread ready"
 **Example -- search from the database (agent_outputs table):**
 
 ```bash
-sqlite3 data/company.db "SELECT agent_slug, title, output_type, file_path, created_at
+sqlite3 data/workspace.db "SELECT agent_slug, title, output_type, file_path, created_at
   FROM agent_outputs
   WHERE output_type = 'report'
   ORDER BY created_at DESC
@@ -1015,7 +1015,7 @@ Defined in `data/schema.sql`. Core tables:
 | `entity_registry` | Links `.memory/entities/` paths to DB rows |
 | `metrics` | Time-series metrics (generic) |
 
-### Workspace execution tables (in `company.db`)
+### Workspace execution tables (in `workspace.db`)
 
 Defined in `data/workspace-schema.sql`. Key tables for agent operations:
 
