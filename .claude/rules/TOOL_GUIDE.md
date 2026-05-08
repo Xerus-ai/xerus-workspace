@@ -975,25 +975,113 @@ sqlite3 data/workspace.db "SELECT agent_slug, title, output_type, file_path, cre
 
 ---
 
-## MCP Tools Reference (Still Available)
+## Filesystem vs MCP
 
-These 13 operations require backend state and are called via the MCP server, not filesystem:
+Filesystem (sqlite3 + Read/Write) is the primary path for workspace operations. MCP tools are an alternative that routes through the backend. Use MCP for operations requiring backend features (pgvector search, notifications, billing, OAuth).
+
+---
+
+## MCP Tools Reference (All 38 Tools)
+
+All 38 platform tools available via the MCP server. These route through the Xerus backend and provide capabilities beyond what the local filesystem offers.
+
+### Session Control (5)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 1 | `pause_execution` | Pause agent for human approval |
-| 2 | `resume_execution` | Resume after approval |
-| 3 | `get_session_state` | Query current session status |
-| 4 | `complete_session` | Signal session is complete |
-| 5 | `connect_tool` | Connect OAuth tool (Pipedream) |
-| 6 | `register_trigger` | Register webhook trigger |
-| 7 | `deregister_trigger` | Remove webhook trigger |
-| 8 | `send_notification` | Send user notification |
-| 9 | `search_tools` | Search available integrations |
-| 10 | `query_memory` | Semantic search across memories (pgvector) |
-| 11 | `analyze_memory_patterns` | Pattern analysis on memories |
-| 12 | `list_triggers` | List registered triggers |
-| 13 | `get_status` | Platform/agent/sandbox status |
+| 1 | `pause_execution` | Pause agent execution for human approval |
+| 2 | `resume_execution` | Resume agent after approval |
+| 3 | `get_session_state` | Query current execution session status |
+| 4 | `complete_session` | Signal that a session is complete |
+| 5 | `cancel_execution` | Cancel an in-progress execution |
+
+### Agent Management (6)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 6 | `search_agents` | Search agents by name, role, or capability |
+| 7 | `list_agents` | List all installed agents with status |
+| 8 | `create_agent` | Create a new agent (backend registration + workspace files) |
+| 9 | `clone_agent` | Clone an existing agent with new identity |
+| 10 | `update_agent` | Update agent config, model, or autonomy level |
+| 11 | `delete_agent` | Remove an agent and clean up resources |
+
+### Knowledge Base (3)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 12 | `search_kb` | Search knowledge bases (pgvector semantic search) |
+| 13 | `upload_kb` | Upload a document to an agent's knowledge base |
+| 14 | `assign_kb` | Assign a knowledge base to an agent |
+
+### Channels & Tasks (4)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 15 | `create_channel` | Create a team channel under a domain |
+| 16 | `add_to_channel` | Add an agent to a channel with a role |
+| 17 | `create_task` | Create a task and deliver to an agent's inbox |
+| 18 | `list_domains` | List all organizational domains |
+
+### Skills (4)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 19 | `search_skills` | Search the skill marketplace |
+| 20 | `create_skill` | Create a new skill definition |
+| 21 | `install_skill` | Install a skill for an agent |
+| 22 | `uninstall_skill` | Remove an installed skill from an agent |
+
+### Memory (3)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 23 | `query_memory` | Semantic search across memories (pgvector) |
+| 24 | `write_memory` | Write a memory entry via the backend |
+| 25 | `analyze_memory_patterns` | Pattern analysis across the memory corpus |
+
+### Outputs (1)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 26 | `search_outputs` | Search agent outputs and deliverables |
+
+### Integrations (2)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 27 | `connect_tool` | Connect an OAuth tool (Pipedream) |
+| 28 | `search_tools` | Search available integrations and connected accounts |
+
+### Triggers (3)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 29 | `register_trigger` | Register a webhook or event trigger |
+| 30 | `deregister_trigger` | Remove a registered trigger |
+| 31 | `list_triggers` | List all registered triggers |
+
+### Communication (1)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 32 | `send_notification` | Send a notification to the user |
+
+### Status (2)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 33 | `get_status` | Platform, agent, or sandbox status |
+| 34 | `get_billing_status` | Current billing usage and budget remaining |
+
+### Scheduling (4)
+
+| # | Tool | Purpose |
+|---|------|---------|
+| 35 | `create_schedule` | Create a recurring schedule for an agent |
+| 36 | `list_schedules` | List all active schedules |
+| 37 | `update_schedule` | Update an existing schedule |
+| 38 | `delete_schedule` | Remove a schedule |
 
 ---
 
