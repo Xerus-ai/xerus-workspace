@@ -342,6 +342,7 @@ CREATE TABLE IF NOT EXISTS chat_executions (
 CREATE INDEX IF NOT EXISTS idx_chat_exec_conversation ON chat_executions(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_chat_exec_session ON chat_executions(session_id);
 CREATE INDEX IF NOT EXISTS idx_chat_exec_created ON chat_executions(created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_exec_conv_session ON chat_executions(conversation_id, session_id);
 
 ------------------------------------------------------------
 -- HEARTBEAT TABLES (5 tables)
@@ -438,9 +439,10 @@ CREATE INDEX IF NOT EXISTS idx_snapshot_exec_started ON snapshot_executions(star
 
 -- Conversations: conversation threads with agents
 -- Groups related messages into conversations
+-- agent_slug is nullable: SET NULL on agent deletion preserves conversation history
 CREATE TABLE IF NOT EXISTS conversations (
     id TEXT PRIMARY KEY,  -- UUID
-    agent_slug TEXT NOT NULL,
+    agent_slug TEXT,
     title TEXT,
     summary TEXT,
     message_count INTEGER NOT NULL DEFAULT 0,
@@ -448,7 +450,7 @@ CREATE TABLE IF NOT EXISTS conversations (
     status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'archived', 'deleted')),
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
     updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-    FOREIGN KEY (agent_slug) REFERENCES agents(slug) ON DELETE CASCADE
+    FOREIGN KEY (agent_slug) REFERENCES agents(slug) ON DELETE SET NULL
 );
 CREATE INDEX IF NOT EXISTS idx_conversations_agent ON conversations(agent_slug);
 CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status);
