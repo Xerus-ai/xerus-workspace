@@ -18,9 +18,9 @@ mkdir -p "$MEMORY_DIR"
 # Initialize company.db + workspace.db if needed
 "$(dirname "$0")/init-db.sh"
 
-# Ensure Python MCP package is installed (required by IPC server)
-if ! python3 -c "import mcp" 2>/dev/null; then
-  pip3 install --break-system-packages --quiet mcp 2>/dev/null &
+# Ensure Python packages are installed (mcp for IPC server, pyyaml for shift.yaml parsing)
+if ! python3 -c "import mcp" 2>/dev/null || ! python3 -c "import yaml" 2>/dev/null; then
+  pip3 install --break-system-packages --quiet mcp pyyaml 2>/dev/null &
 fi
 
 # Ensure scheduler daemon is running (idempotent)
@@ -55,6 +55,31 @@ if [ ! -f "$MEMORY_DIR/working.md" ]; then
 
 No previous session state.
 WORKING
+fi
+
+# Ensure STATUS.md exists for this agent (may be missing for pre-scaffold agents)
+if [ -n "$AGENT_DIR" ] && [ -d "$AGENT_DIR" ] && [ ! -f "$AGENT_DIR/STATUS.md" ]; then
+  TEMPLATE_DIR="$XERUS_WORKSPACE_ROOT/.xerus/templates/agent"
+  if [ -f "$TEMPLATE_DIR/STATUS.md.tmpl" ]; then
+    sed -e "s|{{AGENT_NAME}}|$AGENT_SLUG|g" -e "s|{{AGENT_SLUG}}|$AGENT_SLUG|g" \
+      "$TEMPLATE_DIR/STATUS.md.tmpl" > "$AGENT_DIR/STATUS.md"
+  else
+    cat > "$AGENT_DIR/STATUS.md" <<STATUS
+# Status
+
+## Current State
+- **Mood**: Ready
+- **Energy**: Full
+- **Focus**: Awaiting task assignment
+- **Active Task**: None
+
+## Recent Activity
+(no history)
+
+## Blockers
+None
+STATUS
+  fi
 fi
 
 # Ensure .agent/skills/ → .claude/skills symlink for openskills compatibility (Linux/Daytona only)
