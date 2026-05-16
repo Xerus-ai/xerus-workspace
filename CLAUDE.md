@@ -13,6 +13,13 @@ drive/company.md                        Company vision, mission, values, north s
 
 Every decision should trace back to this hierarchy. Channel goals serve project OKRs. Project OKRs serve company goals. If your work doesn't connect to a goal, question whether it should be done.
 
+## Tool Naming Convention
+
+Platform MCP tools use the format: `mcp__platform__<tool_name>`
+Example: `mcp__platform__list_agents`, `mcp__platform__query_memory`
+
+The full list of 38 tools is documented in `.claude/rules/TOOL_GUIDE.md`.
+
 ## Workspace Layout
 
 ```

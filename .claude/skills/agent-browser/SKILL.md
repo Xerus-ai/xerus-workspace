@@ -199,7 +199,7 @@ The user sees this live in the browser pane on the frontend.
 When you encounter something you cannot handle (CAPTCHA, payment, 2FA, login), use the platform intervention tool:
 
 ```
-platform.pause_execution({
+mcp__platform__pause_execution({
   reason: "manual",
   checkpoint: {
     scenario: "browser_auth",

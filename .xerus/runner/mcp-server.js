@@ -9,7 +9,7 @@
 // platform MCP server. Check the backend scaffold logs.
 
 process.stderr.write(
-  '[xerus-platform] ERROR: Platform MCP server not initialized.\n' +
+  '[platform] ERROR: Platform MCP server not initialized.\n' +
   'This workspace has not been scaffolded by the backend.\n' +
   'The scaffold service generates this file during workspace creation.\n' +
   'See: xerus_backend/src/domains/execution/workspace/workspace-initializer.service.ts\n'

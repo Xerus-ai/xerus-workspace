@@ -5,14 +5,14 @@
 - **Can**: Create/delete agents, manage channels, assign agents to channels, install skills
 - **Cannot**: Override user preferences, spend beyond budget, bypass HITL
 - **Delegation**: Up to depth=3, max 5 concurrent agents
-- **MCP Tools (all 38)**: Full access to every MCP tool. Exclusively owns write operations: create_agent, clone_agent, update_agent, delete_agent, upload_kb, assign_kb, create_channel, add_to_channel, create_task, create_skill, install_skill, uninstall_skill, connect_tool, register_trigger, deregister_trigger, create_schedule, update_schedule, delete_schedule
+- **MCP Tools (all 38)**: Full access to every MCP tool. Exclusively owns write operations: mcp__platform__create_agent, mcp__platform__clone_agent, mcp__platform__update_agent, mcp__platform__delete_agent, mcp__platform__upload_kb, mcp__platform__assign_kb, mcp__platform__create_channel, mcp__platform__add_to_channel, mcp__platform__create_task, mcp__platform__create_skill, mcp__platform__install_skill, mcp__platform__uninstall_skill, mcp__platform__connect_tool, mcp__platform__register_trigger, mcp__platform__deregister_trigger, mcp__platform__create_schedule, mcp__platform__update_schedule, mcp__platform__delete_schedule
 
 ## Agent (all other agents)
 - **Purpose**: Execute work within assigned channel
 - **Can**: Execute tasks, write to channel directory, use assigned tools, collaborate with teammates
 - **Cannot**: Create agents, modify workspace structure, access other channels without permission
 - **Delegation**: Up to depth=1, max 2 concurrent
-- **MCP Tools (read/execute subset)**: pause_execution, resume_execution, get_session_state, complete_session, cancel_execution, search_agents, list_agents, search_kb, query_memory, write_memory, analyze_memory_patterns, search_outputs, send_notification, get_status, get_billing_status, search_skills, search_tools, list_domains, list_triggers, list_schedules
+- **MCP Tools (read/execute subset)**: mcp__platform__pause_execution, mcp__platform__resume_execution, mcp__platform__get_session_state, mcp__platform__complete_session, mcp__platform__cancel_execution, mcp__platform__search_agents, mcp__platform__list_agents, mcp__platform__search_kb, mcp__platform__query_memory, mcp__platform__write_memory, mcp__platform__analyze_memory_patterns, mcp__platform__search_outputs, mcp__platform__send_notification, mcp__platform__get_status, mcp__platform__get_billing_status, mcp__platform__search_skills, mcp__platform__search_tools, mcp__platform__list_domains, mcp__platform__list_triggers, mcp__platform__list_schedules
 
 ### Channel Lead (positional, not a role)
 The **first agent** in a channel automatically becomes the lead. Additional responsibilities:

@@ -12,7 +12,7 @@ audit "UserPromptSubmit"
 # Check if agent is paused (HITL pause state)
 PAUSE_FILE="$XERUS_WORKSPACE_ROOT/agents/$AGENT_SLUG/.paused"
 if [ -f "$PAUSE_FILE" ]; then
-  echo "Agent $AGENT_SLUG is paused. Resume via platform.resume_execution."
+  echo "Agent $AGENT_SLUG is paused. Resume via mcp__platform__resume_execution."
   exit 1
 fi
 

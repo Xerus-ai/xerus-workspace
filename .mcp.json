@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "xerus-platform": {
+    "platform": {
       "command": "node",
       "args": [".xerus/runner/mcp-server.js"],
       "env": {}

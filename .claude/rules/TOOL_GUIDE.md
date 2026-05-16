@@ -24,8 +24,8 @@
 | Search Skills | Glob + Grep | `marketplace/skills/*/SKILL.md` |
 | Install Skill | Edit | Agent config or `.claude/settings.json` |
 | Write Memory | Write | `.memory/{scope}/{type}/{filename}.md` |
-| Query Memory | MCP | `query_memory` (pgvector semantic search) |
-| Get Status | MCP | `get_status` |
+| Query Memory | MCP | `mcp__platform__query_memory` (pgvector semantic search) |
+| Get Status | MCP | `mcp__platform__get_status` |
 | List Domains | Bash (sqlite3) | `domains` table |
 | Search Outputs | Glob + Grep | `agents/{slug}/data/output/` or channel `output/` |
 
@@ -825,10 +825,10 @@ sqlite3 data/workspace.db "INSERT INTO memory_evolution_log (agent_slug, memory_
 
 ### Query Memory (MCP -- requires backend)
 
-For semantic search across memories using vector embeddings, use the `query_memory` MCP tool. This searches the pgvector index on Neon PostgreSQL.
+For semantic search across memories using vector embeddings, use the `mcp__platform__query_memory` tool. This searches the pgvector index on Neon PostgreSQL.
 
 ```
-MCP call: query_memory
+Tool call: mcp__platform__query_memory
   query: "competitor pricing AI workforce"
   scope: "company"       -- optional: "agent", "company", "project", "shared"
   limit: 10              -- optional: max results
@@ -846,10 +846,10 @@ Grep pattern: "competitor.*pricing"
 
 ### Analyze Memory Patterns (MCP -- requires backend)
 
-Use the `analyze_memory_patterns` MCP tool for pattern analysis across the memory corpus.
+Use the `mcp__platform__analyze_memory_patterns` tool for pattern analysis across the memory corpus.
 
 ```
-MCP call: analyze_memory_patterns
+Tool call: mcp__platform__analyze_memory_patterns
   agent_slug: "research-rachel"    -- optional: scope to one agent
   pattern_type: "workflow"         -- optional: workflow, code, communication, error, optimization
 ```
@@ -860,10 +860,10 @@ MCP call: analyze_memory_patterns
 
 ### Get Status (MCP -- requires backend)
 
-Use the `get_status` MCP tool for live platform, agent, and sandbox status.
+Use the `mcp__platform__get_status` tool for live platform, agent, and sandbox status.
 
 ```
-MCP call: get_status
+Tool call: mcp__platform__get_status
   scope: "platform"   -- "platform", "agent", "sandbox"
   agent_slug: ""       -- optional: specific agent
 ```
@@ -983,105 +983,107 @@ Filesystem (sqlite3 + Read/Write) is the primary path for workspace operations. 
 
 ## MCP Tools Reference (All 38 Tools)
 
-All 38 platform tools available via the MCP server. These route through the Xerus backend and provide capabilities beyond what the local filesystem offers.
+MCP tools are called using the format: `mcp__platform__<tool_name>`
+
+All 38 platform tools available via the `platform` MCP server. These route through the Xerus backend and provide capabilities beyond what the local filesystem offers.
 
 ### Session Control (5)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 1 | `pause_execution` | Pause agent execution for human approval |
-| 2 | `resume_execution` | Resume agent after approval |
-| 3 | `get_session_state` | Query current execution session status |
-| 4 | `complete_session` | Signal that a session is complete |
-| 5 | `cancel_execution` | Cancel an in-progress execution |
+| 1 | `mcp__platform__pause_execution` | Pause agent execution for human approval |
+| 2 | `mcp__platform__resume_execution` | Resume agent after approval |
+| 3 | `mcp__platform__get_session_state` | Query current execution session status |
+| 4 | `mcp__platform__complete_session` | Signal that a session is complete |
+| 5 | `mcp__platform__cancel_execution` | Cancel an in-progress execution |
 
 ### Agent Management (6)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 6 | `search_agents` | Search agents by name, role, or capability |
-| 7 | `list_agents` | List all installed agents with status |
-| 8 | `create_agent` | Create a new agent (backend registration + workspace files) |
-| 9 | `clone_agent` | Clone an existing agent with new identity |
-| 10 | `update_agent` | Update agent config, model, or autonomy level |
-| 11 | `delete_agent` | Remove an agent and clean up resources |
+| 6 | `mcp__platform__search_agents` | Search agents by name, role, or capability |
+| 7 | `mcp__platform__list_agents` | List all installed agents with status |
+| 8 | `mcp__platform__create_agent` | Create a new agent (backend registration + workspace files) |
+| 9 | `mcp__platform__clone_agent` | Clone an existing agent with new identity |
+| 10 | `mcp__platform__update_agent` | Update agent config, model, or autonomy level |
+| 11 | `mcp__platform__delete_agent` | Remove an agent and clean up resources |
 
 ### Knowledge Base (3)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 12 | `search_kb` | Search knowledge bases (pgvector semantic search) |
-| 13 | `upload_kb` | Upload a document to an agent's knowledge base |
-| 14 | `assign_kb` | Assign a knowledge base to an agent |
+| 12 | `mcp__platform__search_kb` | Search knowledge bases (pgvector semantic search) |
+| 13 | `mcp__platform__upload_kb` | Upload a document to an agent's knowledge base |
+| 14 | `mcp__platform__assign_kb` | Assign a knowledge base to an agent |
 
 ### Channels & Tasks (4)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 15 | `create_channel` | Create a team channel under a domain |
-| 16 | `add_to_channel` | Add an agent to a channel with a role |
-| 17 | `create_task` | Create a task and deliver to an agent's inbox |
-| 18 | `list_domains` | List all organizational domains |
+| 15 | `mcp__platform__create_channel` | Create a team channel under a domain |
+| 16 | `mcp__platform__add_to_channel` | Add an agent to a channel with a role |
+| 17 | `mcp__platform__create_task` | Create a task and deliver to an agent's inbox |
+| 18 | `mcp__platform__list_domains` | List all organizational domains |
 
 ### Skills (4)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 19 | `search_skills` | Search the skill marketplace |
-| 20 | `create_skill` | Create a new skill definition |
-| 21 | `install_skill` | Install a skill for an agent |
-| 22 | `uninstall_skill` | Remove an installed skill from an agent |
+| 19 | `mcp__platform__search_skills` | Search the skill marketplace |
+| 20 | `mcp__platform__create_skill` | Create a new skill definition |
+| 21 | `mcp__platform__install_skill` | Install a skill for an agent |
+| 22 | `mcp__platform__uninstall_skill` | Remove an installed skill from an agent |
 
 ### Memory (3)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 23 | `query_memory` | Semantic search across memories (pgvector) |
-| 24 | `write_memory` | Write a memory entry via the backend |
-| 25 | `analyze_memory_patterns` | Pattern analysis across the memory corpus |
+| 23 | `mcp__platform__query_memory` | Semantic search across memories (pgvector) |
+| 24 | `mcp__platform__write_memory` | Write a memory entry via the backend |
+| 25 | `mcp__platform__analyze_memory_patterns` | Pattern analysis across the memory corpus |
 
 ### Outputs (1)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 26 | `search_outputs` | Search agent outputs and deliverables |
+| 26 | `mcp__platform__search_outputs` | Search agent outputs and deliverables |
 
 ### Integrations (2)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 27 | `connect_tool` | Connect an OAuth tool (Pipedream) |
-| 28 | `search_tools` | Search available integrations and connected accounts |
+| 27 | `mcp__platform__connect_tool` | Connect an OAuth tool (Pipedream) |
+| 28 | `mcp__platform__search_tools` | Search available integrations and connected accounts |
 
 ### Triggers (3)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 29 | `register_trigger` | Register a webhook or event trigger |
-| 30 | `deregister_trigger` | Remove a registered trigger |
-| 31 | `list_triggers` | List all registered triggers |
+| 29 | `mcp__platform__register_trigger` | Register a webhook or event trigger |
+| 30 | `mcp__platform__deregister_trigger` | Remove a registered trigger |
+| 31 | `mcp__platform__list_triggers` | List all registered triggers |
 
 ### Communication (1)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 32 | `send_notification` | Send a notification to the user |
+| 32 | `mcp__platform__send_notification` | Send a notification to the user |
 
 ### Status (2)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 33 | `get_status` | Platform, agent, or sandbox status |
-| 34 | `get_billing_status` | Current billing usage and budget remaining |
+| 33 | `mcp__platform__get_status` | Platform, agent, or sandbox status |
+| 34 | `mcp__platform__get_billing_status` | Current billing usage and budget remaining |
 
 ### Scheduling (4)
 
 | # | Tool | Purpose |
 |---|------|---------|
-| 35 | `create_schedule` | Create a recurring schedule for an agent |
-| 36 | `list_schedules` | List all active schedules |
-| 37 | `update_schedule` | Update an existing schedule |
-| 38 | `delete_schedule` | Remove a schedule |
+| 35 | `mcp__platform__create_schedule` | Create a recurring schedule for an agent |
+| 36 | `mcp__platform__list_schedules` | List all active schedules |
+| 37 | `mcp__platform__update_schedule` | Update an existing schedule |
+| 38 | `mcp__platform__delete_schedule` | Remove a schedule |
 
 ---
 

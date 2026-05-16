@@ -208,52 +208,52 @@ Write or edit `agents/{slug}/HEARTBEAT.md`:
 ```
 
 Or use the MCP schedule tools for backend-managed schedules:
-- `platform.create_schedule` / `platform.list_schedules` / `platform.update_schedule` / `platform.delete_schedule`
+- `mcp__platform__create_schedule` / `mcp__platform__list_schedules` / `mcp__platform__update_schedule` / `mcp__platform__delete_schedule`
 
 ---
 
 ## Platform Tools (MCP — Backend-Coupled)
 
-These 17 tools require backend state and are accessed via the `xerus-platform` MCP server. Use them when you need capabilities that go beyond the local filesystem.
+These 17 tools require backend state and are accessed via the `platform` MCP server. Use them when you need capabilities that go beyond the local filesystem.
 
 <session_control>
 **Managing running agent sessions:**
-- `platform.get_status` — get agent or workspace status
-- `platform.get_session_state` — query detailed session state
-- `platform.pause_execution` — pause a running session
-- `platform.resume_execution` — resume a paused session
-- `platform.complete_session` — signal session completion
+- `mcp__platform__get_status` — get agent or workspace status
+- `mcp__platform__get_session_state` — query detailed session state
+- `mcp__platform__pause_execution` — pause a running session
+- `mcp__platform__resume_execution` — resume a paused session
+- `mcp__platform__complete_session` — signal session completion
 </session_control>
 
 <triggers>
 **Event-driven automation:**
-- `platform.register_trigger` — register a webhook or event trigger
-- `platform.list_triggers` — list triggers for an agent
-- `platform.deregister_trigger` — remove a registered trigger
+- `mcp__platform__register_trigger` — register a webhook or event trigger
+- `mcp__platform__list_triggers` — list triggers for an agent
+- `mcp__platform__deregister_trigger` — remove a registered trigger
 </triggers>
 
 <schedules>
 **Recurring automated work:**
-- `platform.create_schedule` — create a recurring schedule
-- `platform.list_schedules` — list all schedules
-- `platform.update_schedule` — update schedule configuration
-- `platform.delete_schedule` — remove a schedule
+- `mcp__platform__create_schedule` — create a recurring schedule
+- `mcp__platform__list_schedules` — list all schedules
+- `mcp__platform__update_schedule` — update schedule configuration
+- `mcp__platform__delete_schedule` — remove a schedule
 </schedules>
 
 <memory_search>
 **Semantic memory search (pgvector):**
-- `platform.query_memory` — search memory across scopes (agent, project, company)
-- `platform.analyze_memory_patterns` — analyze memory usage patterns and trends
+- `mcp__platform__query_memory` — search memory across scopes (agent, project, company)
+- `mcp__platform__analyze_memory_patterns` — analyze memory usage patterns and trends
 </memory_search>
 
 <integrations>
 **External tool connections:**
-- `platform.search_tools` — search available tool integrations (Pipedream)
-- `platform.connect_tool` — connect an external tool to the workspace
+- `mcp__platform__search_tools` — search available tool integrations (Pipedream)
+- `mcp__platform__connect_tool` — connect an external tool to the workspace
 </integrations>
 
 <notifications>
-- `platform.send_notification` — send a notification to agents or the user
+- `mcp__platform__send_notification` — send a notification to agents or the user
 </notifications>
 
 ---

@@ -24,10 +24,10 @@
 - WebSearch, WebFetch
 
 ### Orchestrator Only
-- connect_tool (OAuth flows)
-- register_trigger / deregister_trigger (webhook management)
-- create_agent / delete_agent
-- install_skill / uninstall_skill
+- mcp__platform__connect_tool (OAuth flows)
+- mcp__platform__register_trigger / mcp__platform__deregister_trigger (webhook management)
+- mcp__platform__create_agent / mcp__platform__delete_agent
+- mcp__platform__install_skill / mcp__platform__uninstall_skill
 
 ### Requires User Approval
 - delete operations (any destructive action)
@@ -36,25 +36,25 @@
 ### Platform Tools (MCP) — All 38 Tools
 
 **All Roles (Orchestrator + Agent):**
-- **Session Control**: pause_execution, resume_execution, get_session_state, complete_session, cancel_execution
-- **Knowledge Base**: search_kb
-- **Memory**: query_memory, write_memory, analyze_memory_patterns
-- **Outputs**: search_outputs
-- **Communication**: send_notification
-- **Status**: get_status, get_billing_status
-- **Search**: search_agents, list_agents, search_skills, search_tools, list_domains, list_triggers, list_schedules
+- **Session Control**: mcp__platform__pause_execution, mcp__platform__resume_execution, mcp__platform__get_session_state, mcp__platform__complete_session, mcp__platform__cancel_execution
+- **Knowledge Base**: mcp__platform__search_kb
+- **Memory**: mcp__platform__query_memory, mcp__platform__write_memory, mcp__platform__analyze_memory_patterns
+- **Outputs**: mcp__platform__search_outputs
+- **Communication**: mcp__platform__send_notification
+- **Status**: mcp__platform__get_status, mcp__platform__get_billing_status
+- **Search**: mcp__platform__search_agents, mcp__platform__list_agents, mcp__platform__search_skills, mcp__platform__search_tools, mcp__platform__list_domains, mcp__platform__list_triggers, mcp__platform__list_schedules
 
 **Orchestrator Only:**
-- **Agent Management**: create_agent, clone_agent, update_agent, delete_agent
-- **Knowledge Base (write)**: upload_kb, assign_kb
-- **Channels & Tasks**: create_channel, add_to_channel, create_task
-- **Skills (write)**: create_skill, install_skill, uninstall_skill
-- **Integrations**: connect_tool
-- **Triggers**: register_trigger, deregister_trigger
-- **Scheduling**: create_schedule, update_schedule, delete_schedule
+- **Agent Management**: mcp__platform__create_agent, mcp__platform__clone_agent, mcp__platform__update_agent, mcp__platform__delete_agent
+- **Knowledge Base (write)**: mcp__platform__upload_kb, mcp__platform__assign_kb
+- **Channels & Tasks**: mcp__platform__create_channel, mcp__platform__add_to_channel, mcp__platform__create_task
+- **Skills (write)**: mcp__platform__create_skill, mcp__platform__install_skill, mcp__platform__uninstall_skill
+- **Integrations**: mcp__platform__connect_tool
+- **Triggers**: mcp__platform__register_trigger, mcp__platform__deregister_trigger
+- **Scheduling**: mcp__platform__create_schedule, mcp__platform__update_schedule, mcp__platform__delete_schedule
 
 **Requires User Approval:**
-- delete_agent (destructive)
-- deregister_trigger (removes automation)
-- delete_schedule (removes automation)
-- Any spending above budget threshold (get_billing_status to check first)
+- mcp__platform__delete_agent (destructive)
+- mcp__platform__deregister_trigger (removes automation)
+- mcp__platform__delete_schedule (removes automation)
+- Any spending above budget threshold (mcp__platform__get_billing_status to check first)

@@ -188,7 +188,7 @@ cp -r marketplace/skills/{skill-slug} .claude/skills/{skill-slug}
 If user chose a schedule, use the MCP tool:
 
 ```
-platform.create_schedule({
+mcp__platform__create_schedule({
   agent_slug: "{slug}",
   name: "{name} daily check-in",
   prompt: "Check your inbox and task board. Execute any pending tasks. Update your STATUS.md.",
