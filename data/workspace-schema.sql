@@ -25,7 +25,7 @@ PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS agents (
     slug TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    adapter_type TEXT NOT NULL CHECK(adapter_type IN ('claudecode', 'codex')),
+    adapter_type TEXT NOT NULL CHECK(adapter_type IN ('claudecode', 'codex', 'human')),
     role TEXT,
     autonomy_level TEXT NOT NULL DEFAULT 'supervised' CHECK(autonomy_level IN ('autonomous', 'supervised', 'manual')),
     status TEXT NOT NULL DEFAULT 'idle' CHECK(status IN ('idle', 'running', 'paused', 'error', 'disabled')),
