@@ -450,10 +450,12 @@ sqlite3 data/workspace.db "INSERT OR IGNORE INTO domains (slug, name, descriptio
 
 2. Create the channel:
 
+**IMPORTANT**: Channel slugs MUST use `domain--channel` format (e.g., `marketing--content-strategy`). The backend's `normalizeChannelId()` requires the `--` separator. Bare slugs like `content-strategy` will be rejected.
+
 ```bash
 sqlite3 data/workspace.db "INSERT INTO channels (slug, name, domain_slug, lead_agent_slug, description, goals)
   VALUES (
-    'content-strategy',
+    'marketing--content-strategy',
     'Content Strategy',
     'marketing',
     'curator-carla',
@@ -502,7 +504,7 @@ Insert a record into the `channel_members` table.
 
 ```bash
 sqlite3 data/workspace.db "INSERT INTO channel_members (channel_slug, agent_slug, role)
-  VALUES ('content-strategy', 'research-rachel', 'member');"
+  VALUES ('marketing--content-strategy', 'research-rachel', 'member');"
 ```
 
 **Roles:** `lead`, `member`, `observer`
@@ -513,7 +515,7 @@ sqlite3 data/workspace.db "INSERT INTO channel_members (channel_slug, agent_slug
 sqlite3 data/workspace.db "SELECT cm.agent_slug, cm.role, a.name
   FROM channel_members cm
   JOIN agents a ON cm.agent_slug = a.slug
-  WHERE cm.channel_slug = 'content-strategy';"
+  WHERE cm.channel_slug = 'marketing--content-strategy';"
 ```
 
 **Schema reference -- `channel_members` table:**

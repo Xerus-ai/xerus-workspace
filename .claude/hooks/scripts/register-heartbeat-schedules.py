@@ -30,8 +30,12 @@ FREQUENCY_TO_CRON = {
     "hourly": "0 * * * *",
     "every 30 minutes": "*/30 * * * *",
     "every 15 minutes": "*/15 * * * *",
+    "every 15 min": "*/15 * * * *",
+    "every hour": "0 * * * *",
     "weekly monday 9:00 am": "0 9 * * 1",
+    "weekly monday": "0 9 * * 1",
     "weekly friday 5:00 pm": "0 17 * * 5",
+    "weekly friday": "0 17 * * 5",
 }
 
 GENERIC_DAILY_PATTERN = re.compile(
@@ -83,7 +87,12 @@ def frequency_to_cron(freq: str) -> str | None:
 
 
 def parse_heartbeat(heartbeat_path: Path) -> list[dict]:
-    """Parse HEARTBEAT.md and extract scheduled entries."""
+    """Parse HEARTBEAT.md and extract scheduled entries.
+
+    Supports two formats:
+    - Bullet: ``- **Every 15 min**: task description``
+    - Pipe-table: ``| Every 15 min | task description |``
+    """
     if not heartbeat_path.exists():
         return []
 
@@ -100,15 +109,31 @@ def parse_heartbeat(heartbeat_path: Path) -> list[dict]:
                 continue
             if not in_scheduled:
                 continue
-            if not stripped.startswith("- **"):
-                continue
 
+            frequency_str = None
+            task_description = None
+
+            # Bullet format: - **Frequency**: task
             m = re.match(r"-\s+\*\*(.+?)\*\*:\s*(.+)", stripped)
+            if m:
+                frequency_str = m.group(1).strip()
+                task_description = m.group(2).strip()
+
+            # Pipe-table format: | Frequency | task |
             if not m:
+                m = re.match(r"\|\s*(.+?)\s*\|\s*(.+?)\s*\|", stripped)
+                if m:
+                    freq_candidate = m.group(1).strip()
+                    task_candidate = m.group(2).strip()
+                    # Skip header rows (containing dashes or header labels)
+                    if freq_candidate.startswith("-") or freq_candidate.lower() == "frequency":
+                        continue
+                    frequency_str = freq_candidate
+                    task_description = task_candidate
+
+            if not frequency_str or not task_description:
                 continue
 
-            frequency_str = m.group(1).strip()
-            task_description = m.group(2).strip()
             cron = frequency_to_cron(frequency_str)
             if cron is None:
                 continue
@@ -122,38 +147,54 @@ def parse_heartbeat(heartbeat_path: Path) -> list[dict]:
     return entries
 
 
+CRON_TO_RRULE = {
+    "0 * * * *":     "FREQ=HOURLY;BYHOUR=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23",
+    "*/15 * * * *":  "FREQ=MINUTELY;INTERVAL=15",
+    "*/30 * * * *":  "FREQ=MINUTELY;INTERVAL=30",
+}
+
+
+def cron_to_rrule(cron: str) -> str:
+    """Convert a cron expression to an RRULE string."""
+    if cron in CRON_TO_RRULE:
+        return CRON_TO_RRULE[cron]
+
+    parts = cron.split()
+    if len(parts) != 5:
+        return f"FREQ=DAILY"
+
+    minute, hour, _dom, _month, dow = parts
+
+    dow_map = {"0": "SU", "1": "MO", "2": "TU", "3": "WE", "4": "TH", "5": "FR", "6": "SA"}
+
+    if dow != "*":
+        rrule = f"FREQ=WEEKLY;BYDAY={dow_map.get(dow, 'MO')};BYHOUR={hour};BYMINUTE={minute}"
+    else:
+        rrule = f"FREQ=DAILY;BYHOUR={hour};BYMINUTE={minute}"
+    return rrule
+
+
 def register_schedules(db_path: Path, agent_slug: str, entries: list[dict]):
-    """INSERT schedules into workspace.db, skipping duplicates."""
+    """INSERT schedules into the schedules table (read by the scheduler daemon)."""
     if not db_path.exists():
         return 0
 
     conn = sqlite3.connect(str(db_path))
     cursor = conn.cursor()
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS heartbeat_schedules (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            agent_slug TEXT NOT NULL,
-            cron_expression TEXT NOT NULL,
-            task_description TEXT NOT NULL,
-            source TEXT DEFAULT 'heartbeat',
-            enabled INTEGER DEFAULT 1,
-            next_run_at TEXT,
-            last_run_at TEXT,
-            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-            UNIQUE(agent_slug, cron_expression, task_description)
-        )
-    """)
-
     inserted = 0
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now_epoch = int(datetime.now(timezone.utc).timestamp())
     for entry in entries:
+        schedule_id = f"hb-{agent_slug}-{entry['cron'].replace(' ', '-').replace('*', 'x').replace('/', 'd')}"
+        schedule_name = f"heartbeat:{agent_slug}:{entry['frequency']}"
+        rrule = cron_to_rrule(entry["cron"])
         try:
             cursor.execute(
-                """INSERT OR IGNORE INTO heartbeat_schedules
-                   (agent_slug, cron_expression, task_description, source, next_run_at)
-                   VALUES (?, ?, ?, 'heartbeat', ?)""",
-                (agent_slug, entry["cron"], entry["task"], now),
+                """INSERT OR IGNORE INTO schedules
+                   (id, agent_slug, name, prompt, rrule, status, next_run_at, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?)""",
+                (schedule_id, agent_slug, schedule_name, entry["task"],
+                 rrule, now_epoch, now_epoch, now_epoch),
             )
             if cursor.rowcount > 0:
                 inserted += 1

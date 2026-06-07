@@ -39,8 +39,14 @@ if [ -f "$SCHEDULER_SCRIPT" ]; then
   fi
 
   if [ "$SCHEDULER_RUNNING" = false ]; then
+    SCHEDULER_CMD=""
     if command -v bun &>/dev/null; then
-      cd "$XERUS_WORKSPACE_ROOT" && nohup bun run "$SCHEDULER_SCRIPT" >> "$SCHEDULER_LOG" 2>&1 &
+      SCHEDULER_CMD="bun run $SCHEDULER_SCRIPT"
+    elif command -v npx &>/dev/null; then
+      SCHEDULER_CMD="npx tsx $SCHEDULER_SCRIPT"
+    fi
+    if [ -n "$SCHEDULER_CMD" ]; then
+      cd "$XERUS_WORKSPACE_ROOT" && nohup $SCHEDULER_CMD >> "$SCHEDULER_LOG" 2>&1 &
       SCHEDULER_PID=$!
       echo "$SCHEDULER_PID" > "$SCHEDULER_PID_FILE"
       log_activity "scheduler_started" "system" "pid=$SCHEDULER_PID"
