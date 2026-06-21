@@ -19,8 +19,11 @@ completed_at: null
 - [ ] Determine workspace setup path:
   - Path A: "Start fresh" -- create projects and channels from scratch
   - Path B: "Bring my company" -- import existing structure
-- [ ] Build the office: create first project + 2-3 channels
-  - Use templates from .xerus/templates/ for project and channel CLAUDE.md files
+- [ ] Build the office: add channels to the onboarding project (already created during signup)
+  - The first project and #general channel were already created by the onboarding flow — do NOT create a duplicate
+  - Check existing projects: `sqlite3 data/workspace.db "SELECT slug, name FROM domains;"`
+  - Add 1-2 additional channels to the existing project using the create-channel skill
+  - Use templates from .xerus/templates/ for channel CLAUDE.md files
   - Set channel missions and metrics targets that trace back to company goals
 - [ ] Initialize data ecosystem:
   - Verify company.db initialized (sqlite3 data/company.db ".tables")
