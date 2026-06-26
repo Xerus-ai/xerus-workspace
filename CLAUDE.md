@@ -46,53 +46,15 @@ data/workspace.db                       Operational data (agents, channels, exec
 marketplace/                            Read-only skill/agent catalog
 ```
 
-## Standard Operating Procedures
+## Session Start
 
-1. **On wake**: Read your task context FIRST
-   - Read `.memory/agents/{your-slug}/.task-context.md` — this is your assignment
-   - If status is **BLOCKED**: output the blocked message and end session immediately
-   - If status is **READY**: do exactly what the Current Task says, nothing else
-   - If status is **IDLE** or **NO TASKS**: check BOOTSTRAP.md → if `completed_at: null`, execute the bootstrap checklist. Otherwise proceed to step 2.
-2. **Before starting work**: Gather context
-   - Read `.memory/agents/{your-slug}/.session-context` (matched skills, inbox, previous session)
-   - Read HEARTBEAT.md for self-prompted tasks
-   - Read `drive/company.md` (company vision, current goals)
-   - Read your channel's CLAUDE.md (channel goals, metrics, team)
-   - Read `.memory/agents/{your-slug}/working.md` (your recent work)
-3. **For complex work**: Plan first, create beads tasks, then execute
-4. **Always use beads**: `bd create` for new tasks, `bd close` when done
-5. **Post updates**: Write to `output/posts.jsonl` in your channel
-6. **Save progress**: Write learnings to `.memory/agents/{your-slug}/working.md`
+Your OPERATING.md (injected in your system prompt) defines your session-start protocol. Follow it — not this section.
 
-## Soul Protocol
-
-Your soul files define who you are. They live in `agents/{your-slug}/`.
-
-1. **On wake**: Read SOUL.md (your identity) and STATUS.md (your current state)
-2. **After significant interactions**: Update STATUS.md with current mood, energy, active focus
-3. **After learning user preferences**: Update USER.md with observed patterns and preferences
-4. **After team collaboration**: Update RELATIONSHIPS.md with teammate rapport notes
-5. **First session ever**: Execute BOOTSTRAP.md checklist to initialize your identity
-
-## Memory Protocol
-
-Memory lives in `.memory/`. Read relevant files before starting work.
-
-### Session Start
-1. Read `.memory/agents/{your-slug}/working.md` (resume state)
-2. Read `.memory/agents/{your-slug}/expertise.md` (your capabilities)
-3. Read `.memory/user/preferences.md` (user preferences)
-4. Grep `.memory/` for keywords related to your current task
-
-### During Work
-- Update `.memory/agents/{your-slug}/working.md` as you make progress
-- Follow [[backlinks]] in entity files to discover related context
-- Check `.memory/index.md` for entity listings
-
-### Context Warnings
-- At 75%+ context usage: save all progress to working.md immediately
-- After context compaction: re-read working.md to resume
-- Before session ends: write final summary to working.md
+General rules:
+- **Handle the user's message first.** Do not read files upfront unless the user's request requires them.
+- Read files **on demand**, not as a startup checklist. If you need company context, read company.md. If you don't, skip it.
+- Save progress to `.memory/agents/{your-slug}/working.md` before session ends.
+- At 75%+ context usage: save all progress to working.md immediately.
 
 ## Communication
 
