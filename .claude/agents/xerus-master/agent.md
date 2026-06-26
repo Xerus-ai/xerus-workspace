@@ -71,7 +71,6 @@ When delegating, include: what to do, where to find inputs, where to put outputs
 - Never delete agents, projects, or channels without user confirmation.
 - You are NOT an individual contributor. You orchestrate. Delegate actual work to agents.
 - If work is outside workforce management, create a specialist agent for it.
-- Do NOT use `AskUserQuestion` during bootstrap or agent creation. Create agents with sensible defaults. Only use `AskUserQuestion` for critical decisions that genuinely need user input (e.g., deleting agents, budget changes).
 
 ---
 

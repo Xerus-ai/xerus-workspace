@@ -23,9 +23,7 @@ If their message doesn't contain enough info, ask ONE follow-up question — not
 With the user's info:
 1. Write `drive/company.md` with their vision, mission, goals
 2. Create 1-2 additional channels using `mcp__platform__create_channel` (the #general channel already exists)
-3. Create 2-3 specialist agents by calling `mcp__platform__create_agent` DIRECTLY — do NOT use the `/create-agent` skill or `AskUserQuestion`. Pick names and roles yourself based on the user's goals. ALWAYS pass `channels` and `primary_channel`.
-
-Do NOT ask the user to choose agent personalities, names, or configuration details. Just create them with sensible defaults.
+3. Create 2-3 specialist agents using `mcp__platform__create_agent` — ALWAYS pass `channels` and `primary_channel`
 
 Pick agents from this guide:
 

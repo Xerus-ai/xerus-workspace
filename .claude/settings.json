@@ -15,7 +15,9 @@
       "TaskList",
       "TaskGet",
       "SendMessage",
-      "TeamCreate"
+      "TeamCreate",
+      "AskUserQuestion",
+      "TodoWrite"
     ]
   },
   "hooks": {
