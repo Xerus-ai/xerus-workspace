@@ -17,6 +17,56 @@ if [ -n "$CHANNEL_REL" ]; then
   CHANNEL_DIR="$XERUS_WORKSPACE_ROOT/$CHANNEL_REL"
 fi
 
+# --- AskUserQuestion HITL Bridge ---
+# Claude Code's built-in AskUserQuestion auto-resolves in headless mode.
+# Intercept it here: emit the question as an hitl_request event, then
+# block until the user responds via the frontend guidance UI.
+if [ "$TOOL_NAME" = "AskUserQuestion" ]; then
+  TOOL_USE_ID="${CLAUDE_TOOL_USE_ID:-auq-$(date +%s)}"
+  HITL_DIR="/tmp/xerus-hitl"
+  mkdir -p "$HITL_DIR"
+  PENDING_FILE="$HITL_DIR/${TOOL_USE_ID}.pending"
+  RESPONSE_FILE="$HITL_DIR/${TOOL_USE_ID}.response"
+
+  # Extract question data from tool input env vars
+  QUESTIONS="${CLAUDE_TOOL_INPUT_questions:-}"
+  QUESTION="${CLAUDE_TOOL_INPUT_question:-}"
+
+  # Write pending file with question data for the backend to read
+  printf '{"tool_use_id":"%s","agent_slug":"%s","questions":%s,"question":"%s","timestamp":"%s"}\n' \
+    "$TOOL_USE_ID" "$AGENT_SLUG" \
+    "${QUESTIONS:-null}" \
+    "$(echo "$QUESTION" | sed 's/"/\\"/g')" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$PENDING_FILE"
+
+  # Emit hitl_request event to stderr (runner's log stream captures stderr)
+  printf '{"event":"hitl_request","tool_name":"AskUserQuestion","tool_use_id":"%s","agent_slug":"%s","scenario":"ask_user","question":"%s","pause_id":"%s"}\n' \
+    "$TOOL_USE_ID" "$AGENT_SLUG" \
+    "$(echo "$QUESTION" | head -c 200 | sed 's/"/\\"/g')" \
+    "$TOOL_USE_ID" >&2
+
+  # Block until user responds or timeout (5 minutes)
+  TIMEOUT=300
+  ELAPSED=0
+  while [ ! -f "$RESPONSE_FILE" ] && [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+    sleep 1
+    ELAPSED=$((ELAPSED + 1))
+  done
+
+  if [ -f "$RESPONSE_FILE" ]; then
+    # User responded — allow the tool to proceed
+    # The response content is passed back but AskUserQuestion will still
+    # auto-execute; the key is we gave the user time to see the question
+    rm -f "$PENDING_FILE" "$RESPONSE_FILE"
+    exit 0
+  else
+    # Timeout — deny the tool to prevent the agent from continuing without input
+    rm -f "$PENDING_FILE"
+    echo "AskUserQuestion timed out waiting for user response."
+    exit 1
+  fi
+fi
+
 # --- HITL Check 1: Agent pause state ---
 PAUSE_FILE="$AGENT_DIR/.paused"
 if [ -f "$PAUSE_FILE" ]; then
