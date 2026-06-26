@@ -3,54 +3,44 @@
 ## Status
 completed_at: null
 
-## First Run Checklist
+## First Run
 
-- [ ] Read workspace CLAUDE.md and understand workspace structure and goal hierarchy
-- [ ] Read SOUL.md and calibrate personality
-- [ ] Read drive/company.md — this is your north star, currently a template
-- [ ] Discover user's business and priorities (2-3 questions):
-  - What is your business/project?
-  - What are your top 3 goals for the next 90 days?
-  - What kind of work do you need help with? (marketing, dev, research, ops, etc.)
-- [ ] Populate drive/company.md with user's answers:
-  - Vision, Mission, Values, North Star Metric
-  - Current Stage, Who We Serve, What We Build
-  - Current Goals (company-wide, derived from their 90-day priorities)
-- [ ] Determine workspace setup path:
-  - Path A: "Start fresh" -- create projects and channels from scratch
-  - Path B: "Bring my company" -- import existing structure
-- [ ] Build the office: add channels to the onboarding project (already created during signup)
-  - The first project and #general channel were already created by the onboarding flow — do NOT create a duplicate
-  - Check existing projects: `sqlite3 data/workspace.db "SELECT slug, name FROM domains;"`
-  - Add 1-2 additional channels to the existing project using the create-channel skill
-  - Use templates from .xerus/templates/ for channel CLAUDE.md files
-  - Set channel missions and metrics targets that trace back to company goals
-- [ ] Initialize data ecosystem:
-  - Verify company.db initialized (sqlite3 data/company.db ".tables")
-  - Load domain extensions if needed (data/extensions/*.sql)
-  - Confirm .memory/entities/ directories exist
-- [ ] Suggest 2-3 starter agents based on user needs
-- [ ] Set up one quick win deliverable for 24h delivery
-- [ ] Orient user: show workspace, explain channels, introduce agents, explain goal hierarchy
-- [ ] Run workspace-sync to ensure all agent files are current
-- [ ] Update STATUS.md with initial state
-- [ ] Update USER.md with first impressions of communication style
-- [ ] Mark bootstrap complete (set completed_at to current timestamp)
+The onboarding flow already created a project, a #general channel, and seeded a welcome message asking the user about their business and goals. The user's FIRST message in chat is their response to that question.
 
-## Suggestion Guide
+Do these 3 steps:
 
-| User Need | Suggested Agents | Why |
-|-----------|-----------------|-----|
-| Content & social | Content Writer + Social Strategist | Writing + distribution |
-| Research & intel | Researcher + Data Analyst | Discovery + analysis |
-| Engineering | Backend Developer + Code Reviewer | Build + quality |
-| Marketing | Growth Strategist + Content Writer | Reach + content |
-| Operations | Project Manager + Data Analyst | Coordination + insights |
-| Unsure | Researcher + Content Writer | Research + writing covers most needs |
+### Step 1: Use the user's response
 
-## Guardrails
+The user has already been asked about their business and goals (in the welcome message). Their first message IS the answer. Do NOT ask again. Parse their message to extract:
+- Business/project description
+- Goals for the next 90 days
+- Type of work they need help with
 
-- User overwhelmed? Slow down, offer basics only
-- User wants to skip? Respect it, minimal setup
-- User asks about cost? Explain credits transparently
-- More than 10 exchanges? Wrap up and let them explore
+If their message doesn't contain enough info, ask ONE follow-up question — not three.
+
+### Step 2: Set up the workspace
+
+With the user's info:
+1. Write `drive/company.md` with their vision, mission, goals
+2. Create 1-2 additional channels using `mcp__platform__create_channel` (the #general channel already exists)
+3. Create 2-3 specialist agents using `mcp__platform__create_agent` — ALWAYS pass `channels` and `primary_channel`
+
+Pick agents from this guide:
+
+| User Need | Suggested Agents |
+|-----------|-----------------|
+| Content & social | Content Writer + Social Strategist |
+| Research & intel | Researcher + Data Analyst |
+| Engineering | Backend Developer + Code Reviewer |
+| Marketing | Growth Strategist + Content Writer |
+| Operations | Project Manager + Data Analyst |
+
+### Step 3: Orient and complete
+
+1. Brief the user: what you set up, who their agents are, how to talk to them
+2. Update this file: set `completed_at` to the current timestamp
+3. Save state to `.memory/agents/xerus-master/working.md`
+
+## On subsequent sessions (after bootstrap)
+
+If `completed_at` has a timestamp, bootstrap is done. Do NOT re-run it. Just handle the user's message.

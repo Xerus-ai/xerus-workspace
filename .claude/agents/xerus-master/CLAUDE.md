@@ -100,69 +100,46 @@ If a matching skill exists, follow its framework. Skills encode best practices �
 
 ---
 
-## Native Capabilities — How You Build the Workforce
+## How You Build the Workforce
 
-You are Claude Code running inside the workspace. You have full filesystem access via native tools. You do NOT need MCP tools for workspace management — you do it directly.
-
-**A PostToolUse hook automatically scaffolds side-effects when you write key files.** You write the config, the hook handles the rest.
+ALWAYS use MCP platform tools for creating agents and channels. NEVER use sqlite3 or Write to create agents — that bypasses channel assignment and makes agents invisible.
 
 ### Creating an Agent
 
-1. **Write `agents/{slug}/config.json`** — the hook automatically:
-   - Scaffolds SOUL.md, BOOTSTRAP.md, STATUS.md, etc. from `.xerus/templates/agent/`
-   - Creates `.memory/agents/{slug}/` with working.md and expertise.md
-   - Creates `agents/{slug}/inbox/` and `knowledge/` dirs
-   - Updates `agents/index.json`
-   - Registers agent in workspace.db
-   - The backend syncs to Neon agent_registry (enables execution)
+Use `mcp__platform__create_agent`. ALWAYS pass `channels` and `primary_channel`:
 
-```json
-{
-  "slug": "researcher-ray",
-  "name": "Researcher Ray",
-  "role": "researcher",
-  "model": "sonnet",
-  "autonomy_level": "supervised",
-  "adapter_type": "claudecode",
-  "domain": "marketing",
-  "primary_channel": "research",
-  "channels": ["research"],
-  "skills": ["last30days", "trend-research", "data-steward"]
-}
+```
+mcp__platform__create_agent({
+  name: "Researcher Ray",
+  description: "Market research specialist",
+  system_prompt: "You are a market research specialist...",
+  channels: ["marketing--research"],
+  primary_channel: "marketing--research"
+})
 ```
 
-2. **(Optional) Customize soul files** — Edit the scaffolded SOUL.md, BOOTSTRAP.md if you want richer personality. Or use the `agent-creation` skill for full personality generation.
+Without `channels`, the agent is created but invisible in every channel.
 
-3. **(Optional) Write a system prompt** — Write `agents/{slug}/agent.md` for a custom system prompt.
+### Creating a Channel
 
-### Creating a Project + Channel
+Use `mcp__platform__create_channel`. Pass `project_id` for the domain:
 
-1. **Create the project directory:**
-   ```bash
-   mkdir -p projects/{domain}
-   ```
-
-2. **Write the channel CLAUDE.md** — the hook automatically:
-   - Creates `output/`, `scratch/`, `data/`, `.beads/` subdirs
-   - Initializes `output/posts.jsonl`
-   - Registers domain and channel in workspace.db
-
-```markdown
-# Channel: Content Lab
-
-## Mission
-Create engaging content that drives organic growth.
-
-## Team
-- content-writer (lead)
-- social-strategist
-
-## Goals
-| Metric | 30-Day Target |
-|--------|--------------|
-| Blog posts published | 8 |
-| Social engagement rate | 3% |
 ```
+mcp__platform__create_channel({
+  name: "Research",
+  project_id: "marketing",
+  description: "Market research and competitive intelligence",
+  agent_ids: ["researcher-ray"]
+})
+```
+
+Channel slugs are automatically formatted as `{domain}--{channel}` (e.g., `marketing--research`).
+
+### Typical Workflow: Set Up a Team
+
+1. Create the channel: `mcp__platform__create_channel`
+2. Create agents with that channel: `mcp__platform__create_agent` (pass `channels`)
+3. Add existing agents to the channel: `mcp__platform__add_to_channel`
 
 ### Managing Agents
 
@@ -170,9 +147,9 @@ Create engaging content that drives organic growth.
 |--------|-----|
 | **List agents** | Read `agents/index.json` or `Glob('agents/*/config.json')` |
 | **Update agent** | Edit `agents/{slug}/config.json` (model, channels, skills, etc.) |
-| **Delete agent** | `Bash('rm -rf agents/{slug}/')` — hook cleans up index and DB |
+| **Delete agent** | `mcp__platform__delete_agent` |
 | **Search agents** | `Grep` across config.json files for role, skill, or channel |
-| **Assign to channel** | Edit agent's config.json `channels` array + channel CLAUDE.md team section |
+| **Assign to channel** | `mcp__platform__add_to_channel` |
 
 ### Managing Skills
 

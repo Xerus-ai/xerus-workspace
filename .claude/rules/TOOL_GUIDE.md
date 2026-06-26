@@ -1,33 +1,32 @@
 # Workspace Operations Guide
 
-> This guide documents how to perform platform operations using workspace files.
-> These operations were previously MCP tools but are now filesystem-native.
-> Use Claude Code's built-in tools (Read, Write, Bash, Glob, Grep) for all operations below.
+> This guide documents how to perform platform operations.
+> For state mutations (create/delete agents, channels, tasks), ALWAYS use MCP platform tools.
+> For read operations, use Claude Code's built-in tools (Read, Glob, Grep).
+> NEVER use sqlite3 to create agents, channels, or tasks — it bypasses channel assignment and makes entities invisible.
 
 ## Quick Reference
 
-| Operation | Tool(s) | Primary Path |
-|-----------|---------|-------------|
-| Create Agent | Write | `agents/{slug}/config.json` + `agents/{slug}/agent.md` |
-| Update Agent | Read + Edit | `agents/{slug}/config.json` |
-| Search Agents | Glob + Read | `agents/*/config.json` |
-| Clone Agent | Read + Write | `agents/{source}/` -> `agents/{target}/` |
-| Delete Agent | Bash | `agents/{slug}/` |
-| List Agents | Glob | `agents/*/config.json` |
-| Search KB | Grep / Glob | `agents/{slug}/knowledge/` |
-| Upload to KB | Write | `agents/{slug}/knowledge/{filename}` |
-| Assign KB | Read + Write | Copy between `agents/*/knowledge/` |
-| Create Channel | Bash (sqlite3) | `data/workspace-schema.sql` -> `channels` table |
-| Add Agent to Channel | Bash (sqlite3) | `channel_members` table |
-| Create Task | Write | `agents/{slug}/inbox/{task-id}.md` |
-| Create Skill | Write | `marketplace/skills/{slug}/SKILL.md` |
-| Search Skills | Glob + Grep | `marketplace/skills/*/SKILL.md` |
-| Install Skill | Edit | Agent config or `.claude/settings.json` |
-| Write Memory | Write | `.memory/{scope}/{type}/{filename}.md` |
-| Query Memory | MCP | `mcp__platform__query_memory` (pgvector semantic search) |
-| Get Status | MCP | `mcp__platform__get_status` |
-| List Domains | Bash (sqlite3) | `domains` table |
-| Search Outputs | Glob + Grep | `agents/{slug}/data/output/` or channel `output/` |
+| Operation | Tool | Notes |
+|-----------|------|-------|
+| **Create Agent** | `mcp__platform__create_agent` | MUST pass `channels` and `primary_channel` |
+| **Clone Agent** | `mcp__platform__clone_agent` | |
+| **Update Agent** | Read + Edit `agents/{slug}/config.json` | For config changes |
+| **Delete Agent** | `mcp__platform__delete_agent` | |
+| **Search Agents** | Glob + Read `agents/*/config.json` | |
+| **List Agents** | Read `agents/index.json` | |
+| **Create Channel** | `mcp__platform__create_channel` | Pass `project_id` for domain |
+| **Add to Channel** | `mcp__platform__add_to_channel` | |
+| **Create Task** | `mcp__platform__create_task` | |
+| **Search KB** | Grep / Glob `agents/{slug}/knowledge/` | |
+| **Upload to KB** | Write `agents/{slug}/knowledge/{filename}` | |
+| **Create Skill** | `mcp__platform__create_skill` | |
+| **Search Skills** | Glob + Grep `marketplace/skills/*/SKILL.md` | |
+| **Write Memory** | Write `.memory/{scope}/{type}/{filename}.md` | |
+| **Query Memory** | `mcp__platform__query_memory` | pgvector semantic search |
+| **Get Status** | `mcp__platform__get_status` | |
+| **List Domains** | `mcp__platform__list_domains` | |
+| **Search Outputs** | Glob + Grep `output/` directories | |
 
 ---
 
@@ -35,96 +34,23 @@
 
 ### Create an Agent
 
-Write two files to `agents/{slug}/`: a `config.json` with the agent's operational config, and an `agent.md` with the agent's system prompt and personality.
+Use the MCP platform tool. It handles all scaffolding: config.json, agent.md, soul files, workspace.db registration, index.json, channel assignment.
 
-**Files:**
-- `agents/{slug}/config.json` -- operational configuration
-- `agents/{slug}/agent.md` -- system prompt, identity, goals
-
-**config.json structure:**
-
-```json
-{
-  "slug": "research-rachel",
-  "name": "Research Rachel",
-  "description": "Market research specialist...",
-  "role": "research",
-  "model": "claude-sonnet-4.5",
-  "autonomy_level": "supervised",
-  "domain": "",
-  "primary_channel": "",
-  "channels": [],
-  "tools": ["firecrawl"],
-  "heartbeat_cron": "",
-  "mascot": ""
-}
-```
-
-**agent.md frontmatter structure:**
-
-```yaml
----
-name: Research Rachel
-slug: research-rachel
-description: Market research specialist...
-personality_type: analytical
-ai_model: claude-sonnet-4.5
-category: research
-tags: [research, analysis, market]
-autonomy_level: supervised
-tools: [firecrawl]
-skills: [market_analysis]
-model_config:
-  temperature: 0.5
-  top_p: 0.9
-  max_tokens: 4000
-permissions:
-  can_write_files: true
-  can_send_emails: false
-  can_create_tasks: true
----
-```
-
-**Steps:**
-
-1. Create the agent directory and both files:
+**ALWAYS pass `channels` and `primary_channel`.** Without channels, the agent is invisible on the frontend.
 
 ```
-# Write config.json
-Write agents/research-rachel/config.json
-
-# Write agent.md (frontmatter + system prompt)
-Write agents/research-rachel/agent.md
+mcp__platform__create_agent({
+  name: "Research Rachel",
+  description: "Market research specialist focused on competitive intelligence",
+  system_prompt: "You are Research Rachel, a market research specialist...",
+  model_id: "claude-sonnet",
+  autonomy_level: "supervised",
+  channels: ["marketing--research"],
+  primary_channel: "marketing--research"
+})
 ```
 
-2. Register the agent in the workspace database:
-
-```bash
-sqlite3 data/workspace.db "INSERT INTO agents (slug, name, adapter_type, role, autonomy_level, status, config)
-  VALUES ('research-rachel', 'Research Rachel', 'claudecode', 'research', 'supervised', 'idle',
-  '{\"model\": \"claude-sonnet-4.5\", \"temperature\": 0.5}');"
-```
-
-3. Update the agents index:
-
-```
-# Read agents/index.json, add the new agent entry, then Write it back
-```
-
-4. Create supporting directories:
-
-```bash
-mkdir -p agents/research-rachel/knowledge
-mkdir -p agents/research-rachel/inbox
-mkdir -p .memory/agents/research-rachel
-```
-
-5. Initialize agent memory files:
-
-```
-Write .memory/agents/research-rachel/working.md
-Write .memory/agents/research-rachel/expertise.md
-```
+The tool returns the created agent with slug, status, and installed_at.
 
 ---
 
@@ -204,85 +130,26 @@ Grep pattern: '"role":\s*"creative"'
 
 ### Clone an Agent
 
-Copy all files from the source agent directory to a new target directory, then update the slug, name, and any identity fields.
-
-**Files:**
-- Source: `agents/{source-slug}/`
-- Target: `agents/{target-slug}/`
-
-**Steps:**
-
-1. Read source files:
+Use the MCP platform tool:
 
 ```
-Read agents/research-rachel/config.json
-Read agents/research-rachel/agent.md
-```
-
-2. Write to target with updated identity:
-
-```
-# Write config.json with new slug/name
-Write agents/research-rachel-v2/config.json
-  (paste content with slug and name changed)
-
-# Write agent.md with new identity
-Write agents/research-rachel-v2/agent.md
-  (paste content with slug and name changed)
-```
-
-3. Copy knowledge base files if present:
-
-```bash
-cp -r agents/research-rachel/knowledge/ agents/research-rachel-v2/knowledge/ 2>/dev/null
-```
-
-4. Create supporting structure:
-
-```bash
-mkdir -p agents/research-rachel-v2/inbox
-mkdir -p .memory/agents/research-rachel-v2
-touch .memory/agents/research-rachel-v2/working.md
-touch .memory/agents/research-rachel-v2/expertise.md
-```
-
-5. Register the clone in the database:
-
-```bash
-sqlite3 data/workspace.db "INSERT INTO agents (slug, name, adapter_type, role, autonomy_level, status, config)
-  SELECT 'research-rachel-v2', 'Research Rachel V2', adapter_type, role, autonomy_level, 'idle', config
-  FROM agents WHERE slug = 'research-rachel';"
+mcp__platform__clone_agent({
+  source_agent_id: "research-rachel",
+  new_name: "Research Rachel V2",
+  new_slug: "research-rachel-v2"
+})
 ```
 
 ---
 
 ### Delete an Agent
 
-Remove the agent directory, its memory, and its database records.
-
-**Files:**
-- `agents/{slug}/` -- agent definition
-- `.memory/agents/{slug}/` -- agent memory
-
-**Steps:**
-
-1. Remove from database first (cascades to related tables):
-
-```bash
-sqlite3 data/workspace.db "DELETE FROM agents WHERE slug = 'research-rachel';"
-```
-
-2. Remove filesystem artifacts:
-
-```bash
-rm -rf agents/research-rachel/
-rm -rf .memory/agents/research-rachel/
-```
-
-3. Update the agents index:
+Use the MCP platform tool:
 
 ```
-# Read agents/index.json, remove the entry, Write it back
+mcp__platform__delete_agent({
+  agent_id: "research-rachel"
+})
 ```
 
 ---
@@ -434,99 +301,34 @@ sqlite3 data/workspace.db "INSERT INTO agent_knowledge_bases (agent_slug, kb_id,
 
 ### Create a Channel
 
-Channels are stored in the `channels` table of the workspace database. They live under domains (organizational units).
-
-**Database:** `data/workspace.db`
-**Tables:** `domains`, `channels`
-
-**Steps:**
-
-1. Ensure the domain exists (create if needed):
-
-```bash
-sqlite3 data/workspace.db "INSERT OR IGNORE INTO domains (slug, name, description)
-  VALUES ('marketing', 'Marketing', 'Marketing department');"
-```
-
-2. Create the channel:
-
-**IMPORTANT**: Channel slugs MUST use `domain--channel` format (e.g., `marketing--content-strategy`). The backend's `normalizeChannelId()` requires the `--` separator. Bare slugs like `content-strategy` will be rejected.
-
-```bash
-sqlite3 data/workspace.db "INSERT INTO channels (slug, name, domain_slug, lead_agent_slug, description, goals)
-  VALUES (
-    'marketing--content-strategy',
-    'Content Strategy',
-    'marketing',
-    'curator-carla',
-    'Channel for content planning and strategy',
-    '{\"primary\": \"Create 10 content pieces per week\", \"metrics\": [\"engagement_rate\", \"publish_count\"]}'
-  );"
-```
-
-3. Create the channel's filesystem structure under the project:
-
-```bash
-mkdir -p projects/marketing/channels/content-strategy/output/deliverables
-mkdir -p projects/marketing/channels/content-strategy/scratch
-touch projects/marketing/channels/content-strategy/output/posts.jsonl
-```
-
-4. Write the channel's CLAUDE.md:
+Use the MCP platform tool. It handles domain creation, DB registration, and filesystem scaffolding.
 
 ```
-Write projects/marketing/channels/content-strategy/CLAUDE.md
-  content: (channel mission, goals, metrics, team, rules)
+mcp__platform__create_channel({
+  name: "Content Strategy",
+  project_id: "marketing",
+  description: "Content planning and strategy",
+  agent_ids: ["curator-carla", "content-writer"]
+})
 ```
 
-**Schema reference -- `channels` table:**
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `slug` | TEXT PK | Channel identifier |
-| `name` | TEXT | Display name |
-| `domain_slug` | TEXT FK | Parent domain |
-| `lead_agent_slug` | TEXT FK | Channel manager agent |
-| `description` | TEXT | Channel purpose |
-| `goals` | TEXT (JSON) | Goals and metrics |
-| `config` | TEXT (JSON) | Channel settings |
+Channel slugs are auto-formatted as `{project_id}--{name-slug}` (e.g., `marketing--content-strategy`).
 
 ---
 
 ### Add Agent to Channel
 
-Insert a record into the `channel_members` table.
+Use the MCP platform tool. It updates all 4 sources of truth (config.json channels[], index.json, channel_members table, lead_agent_slug).
 
-**Database:** `data/workspace.db`
-**Table:** `channel_members`
-
-**Example:**
-
-```bash
-sqlite3 data/workspace.db "INSERT INTO channel_members (channel_slug, agent_slug, role)
-  VALUES ('marketing--content-strategy', 'research-rachel', 'member');"
+```
+mcp__platform__add_to_channel({
+  channel_id: "marketing--content-strategy",
+  agent_id: "research-rachel",
+  role: "member"
+})
 ```
 
 **Roles:** `lead`, `member`, `observer`
-
-**List current channel members:**
-
-```bash
-sqlite3 data/workspace.db "SELECT cm.agent_slug, cm.role, a.name
-  FROM channel_members cm
-  JOIN agents a ON cm.agent_slug = a.slug
-  WHERE cm.channel_slug = 'marketing--content-strategy';"
-```
-
-**Schema reference -- `channel_members` table:**
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INTEGER PK | Auto-increment ID |
-| `channel_slug` | TEXT FK | Channel reference |
-| `agent_slug` | TEXT FK | Agent reference |
-| `role` | TEXT | `lead`, `member`, or `observer` |
-| `joined_at` | TEXT | ISO timestamp |
 
 ---
 
@@ -534,62 +336,17 @@ sqlite3 data/workspace.db "SELECT cm.agent_slug, cm.role, a.name
 
 ### Create a Task
 
-Write a task file to an agent's inbox directory. The backend also mirrors tasks in the `inbox_items` table.
-
-**Files:** `agents/{slug}/inbox/{task-id}.md`
-
-**Example:**
+Use the MCP platform tool:
 
 ```
-Write agents/research-rachel/inbox/task-2026-04-03-competitor-deep-dive.md
+mcp__platform__create_task({
+  channel_id: "marketing--content-strategy",
+  title: "Deep dive on competitor pricing",
+  description: "Perform a deep competitive analysis of the top 5 AI workforce platforms.",
+  assigned_agent_ids: ["research-rachel"],
+  priority: "high"
+})
 ```
-
-**Task file format:**
-
-```markdown
----
-id: task-2026-04-03-competitor-deep-dive
-type: task
-from: xerus-master
-priority: high
-subject: Deep dive on competitor pricing
-created_at: 2026-04-03T10:00:00Z
----
-
-## Task
-
-Perform a deep competitive analysis of the top 5 AI workforce platforms.
-Focus on pricing models, feature comparison, and market positioning.
-
-## Deliverables
-
-- `output/deliverables/competitor-analysis-q2-2026.md`
-- Update `data/company.db` competitors table
-
-## Deadline
-
-2026-04-05T17:00:00Z
-```
-
-**Also register in the database for queryability:**
-
-```bash
-sqlite3 data/workspace.db "INSERT INTO inbox_items (agent_slug, sender_slug, message_type, subject, content, priority)
-  VALUES ('research-rachel', 'xerus-master', 'task', 'Deep dive on competitor pricing',
-  'Perform a deep competitive analysis...', 'high');"
-```
-
-**Schema reference -- `inbox_items` table:**
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `agent_slug` | TEXT FK | Receiving agent |
-| `sender_slug` | TEXT | Sending agent (null for system) |
-| `message_type` | TEXT | `coordination`, `system`, `task`, `notification` |
-| `subject` | TEXT | Brief subject line |
-| `content` | TEXT | Full message body |
-| `priority` | TEXT | `urgent`, `high`, `normal`, `low` |
-| `status` | TEXT | `unread`, `read`, `actioned`, `archived` |
 
 ---
 
