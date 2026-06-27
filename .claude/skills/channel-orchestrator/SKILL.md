@@ -28,9 +28,10 @@ projects/{project}/channels/{channel}/
 ├── .memory/            # Channel memory
 ├── scratch/            # Temp work
 └── output/
-    ├── deliverables/   # Final outputs
-    └── posts.jsonl     # Channel feed
+    └── deliverables/   # Final outputs
 ```
+
+> Channel feed messages are sent via `mcp__platform__send_notification`, not written to files.
 
 ## Daily Standup Protocol
 
@@ -64,15 +65,10 @@ projects/{project}/channels/{channel}/
    ```
 
 4. **Post to Channel Feed**
-   ```json
-   {
-     "agent_slug": "your-slug",
-     "content": "Daily standup complete. See .channel/state/standups/{date}.md",
-     "message_type": "system",
-     "metadata": {"standup_date": "{date}"},
-     "posted_at": "{timestamp}"
-   }
-   ```
+   Use `mcp__platform__send_notification` to post the standup summary:
+   - content: "Daily standup complete. See .channel/state/standups/{date}.md"
+   - message_type: "system"
+   - metadata: `{"standup_date": "{date}"}`
 
 ## Handoff Protocol
 
@@ -99,15 +95,10 @@ projects/{project}/channels/{channel}/
    ```
 
 3. **Notify Target**
-   ```json
-   {
-     "agent_slug": "your-slug",
-     "content": "Handoff: {context}. See .channel/state/handoffs/{file}",
-     "message_type": "coordination",
-     "metadata": {"target_agent": "target-slug", "handoff_file": "{path}"},
-     "posted_at": "{timestamp}"
-   }
-   ```
+   Use `mcp__platform__send_notification` to notify the target agent:
+   - content: "Handoff: {context}. See .channel/state/handoffs/{file}"
+   - message_type: "coordination"
+   - metadata: `{"target_agent": "target-slug", "handoff_file": "{path}"}`
 
 ## Shift Management
 
@@ -151,17 +142,10 @@ projects/{project}/channels/{channel}/
    - Identify dependencies and blockers
 
 2. **Send Cross-Channel Messages**
-   Write to target channel's output/posts.jsonl:
-   ```json
-   {
-     "agent_slug": "your-slug",
-     "source_channel": "your-channel",
-     "content": "{message}",
-     "message_type": "coordination",
-     "metadata": {"target_channel": "target-channel", "target_agent": "their-lead"},
-     "posted_at": "{timestamp}"
-   }
-   ```
+   Use `mcp__platform__send_notification` to message another channel:
+   - content: "{message}"
+   - message_type: "coordination"
+   - metadata: `{"target_channel": "target-channel", "target_agent": "their-lead"}`
 
 ## Lead Agent Checklist
 

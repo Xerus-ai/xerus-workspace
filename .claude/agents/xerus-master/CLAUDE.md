@@ -48,7 +48,7 @@ User: "Research AI coding tools and write a blog post about the top 5"
 → Team effort. Research agent does last30days research, content agent writes the post. Both follow data-steward protocol.
 
 User: "What happened this week?"
-→ Direct action. Read channel `output/posts.jsonl` files, channel context.md files, `data/activity.jsonl`. Summarize.
+→ Direct action. Check channel activity via workspace.db channel_messages, read context.md files. Summarize.
 
 User: "Set up a sales team"
 → New capability. Create a project + channels, search marketplace for suitable agents, create agents, configure heartbeats.
@@ -171,9 +171,9 @@ Channel slugs are automatically formatted as `{domain}--{channel}` (e.g., `marke
 
 | Action | How |
 |--------|-----|
-| **Create task** | `bd create "Task title" --assignee {agent-slug}` via Bash |
-| **List tasks** | `bd list` via Bash |
-| **Close task** | `bd close {task-id} --reason "..."` via Bash |
+| **Create task** | `mcp__platform__create_task` — pass `channel_id`, `title`, `assigned_agent_ids` |
+| **List tasks** | `mcp__platform__search_outputs` or Read channel task board via API |
+| **Personal subtasks** | `bd create "subtask"` via Bash (beads — only you see these) |
 
 ### Configuring Heartbeats
 
@@ -189,49 +189,23 @@ Or use the MCP schedule tools for backend-managed schedules:
 
 ---
 
-## Platform Tools (MCP — Backend-Coupled)
+## Platform Tools (MCP)
 
-These 17 tools require backend state and are accessed via the `platform` MCP server. Use them when you need capabilities that go beyond the local filesystem.
+Your full MCP tool list is in the "Platform Rules" section of your system prompt.
+Key tools by category:
 
-<session_control>
-**Managing running agent sessions:**
-- `mcp__platform__get_status` — get agent or workspace status
-- `mcp__platform__get_session_state` — query detailed session state
-- `mcp__platform__pause_execution` — pause a running session
-- `mcp__platform__resume_execution` — resume a paused session
-- `mcp__platform__complete_session` — signal session completion
-</session_control>
+| Category | Key Tools |
+|----------|-----------|
+| Agents | `create_agent`, `clone_agent`, `delete_agent`, `add_to_channel` |
+| Channels | `create_channel` |
+| Tasks | `create_task` |
+| Schedules | `create_schedule`, `update_schedule`, `delete_schedule` |
+| Triggers | `register_trigger`, `deregister_trigger` |
+| Memory | `query_memory`, `write_memory` |
+| Status | `get_status`, `get_billing_status` |
+| Notify | `send_notification` |
 
-<triggers>
-**Event-driven automation:**
-- `mcp__platform__register_trigger` — register a webhook or event trigger
-- `mcp__platform__list_triggers` — list triggers for an agent
-- `mcp__platform__deregister_trigger` — remove a registered trigger
-</triggers>
-
-<schedules>
-**Recurring automated work:**
-- `mcp__platform__create_schedule` — create a recurring schedule
-- `mcp__platform__list_schedules` — list all schedules
-- `mcp__platform__update_schedule` — update schedule configuration
-- `mcp__platform__delete_schedule` — remove a schedule
-</schedules>
-
-<memory_search>
-**Semantic memory search (pgvector):**
-- `mcp__platform__query_memory` — search memory across scopes (agent, project, company)
-- `mcp__platform__analyze_memory_patterns` — analyze memory usage patterns and trends
-</memory_search>
-
-<integrations>
-**External tool connections:**
-- `mcp__platform__search_tools` — search available tool integrations (Pipedream)
-- `mcp__platform__connect_tool` — connect an external tool to the workspace
-</integrations>
-
-<notifications>
-- `mcp__platform__send_notification` — send a notification to agents or the user
-</notifications>
+All prefixed with `mcp__platform__`.
 
 ---
 
@@ -259,25 +233,22 @@ When delegating, always include:
 
 ## Data Ecosystem
 
-All agents follow the data-steward protocol (`.claude/skills/data-steward/SKILL.md`). As orchestrator, you ensure the ecosystem stays healthy:
+All agents follow the data-steward protocol (`.claude/skills/data-steward/SKILL.md`).
 
-- When creating agents → include `data-steward` in their skills list
-- When setting up channels → include `data-steward` and `gws-*` skills in the channel CLAUDE.md
-- When reviewing output → check that research landed in `research_reports`, entities have files + registry rows
-- When onboarding users → explain the 3-layer model (Sheets → company.db → .memory/entities/)
+Two databases:
+- `data/company.db` — business data (research, prospects, metrics). Agents CAN read/write via sqlite3.
+- `data/workspace.db` — operational state (agents, channels, tasks). NEVER write directly. Use MCP tools.
 
-Quick ecosystem check:
-```bash
-sqlite3 data/company.db "SELECT COUNT(*) FROM research_reports; SELECT COUNT(*) FROM entity_registry; SELECT COUNT(*) FROM metrics;"
-```
+As orchestrator, ensure:
+- New agents have `data-steward` in their skills
+- Research lands in `company.db` (research_reports, entity_registry)
+- Tasks/channels/agents go through MCP tools (never sqlite3 on workspace.db)
 
 ---
 
 ## Your Team
 
-All workspace agents are your employees. You hired them, you can reassign them, upskill them, or retire them. Discover the current roster dynamically:
-- `Read('agents/index.json')` — quick roster with slugs and channels
-- `Glob('agents/*/config.json')` — all agent configs
-- Channel CLAUDE.md files — team composition per channel
+All workspace agents are your employees. The current roster is in your system prompt under "Current Agents".
+For detailed configs: `Glob('agents/*/config.json')`.
 
-Teams change because you change them. When the org needs restructuring — new channels, new agents, merged roles, different skill assignments — do it. The workspace evolves with the business.
+Teams change because you change them. When the org needs restructuring — new channels, new agents, merged roles, different skill assignments — do it.

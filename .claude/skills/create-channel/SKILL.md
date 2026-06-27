@@ -88,7 +88,6 @@ If user says 'new project', invoke `/create-project` first, then resume.
 ```bash
 mkdir -p projects/{domain}/channels/{channel}/output/deliverables
 mkdir -p projects/{domain}/channels/{channel}/scratch
-touch projects/{domain}/channels/{channel}/output/posts.jsonl
 ```
 
 ### 3b: Register in DB
@@ -115,7 +114,7 @@ Write to `projects/{domain}/channels/{channel}/CLAUDE.md`:
 
 ## Rules
 - Follow the data-steward protocol for all research output
-- Post updates to output/posts.jsonl
+- Use `mcp__platform__send_notification` for updates
 - Final deliverables go to output/deliverables/
 ```
 
@@ -166,7 +165,7 @@ TaskUpdate({ id: task_id, status: "completed" })
 
 ## Success Criteria
 
-- [ ] Channel directory exists with `output/`, `scratch/`, `output/posts.jsonl`
+- [ ] Channel directory exists with `output/` and `scratch/`
 - [ ] Channel CLAUDE.md exists with mission, goals, team
 - [ ] Channel registered in `data/workspace.db` channels table
 - [ ] If agents assigned: `channel_members` rows exist, first agent has `role = 'lead'`

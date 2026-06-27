@@ -140,7 +140,6 @@ sqlite3 data/workspace.db "INSERT INTO channels (slug, name, domain_slug, descri
 ```bash
 mkdir -p projects/{domain}/channels/{channel}/output/deliverables
 mkdir -p projects/{domain}/channels/{channel}/scratch
-touch projects/{domain}/channels/{channel}/output/posts.jsonl
 ```
 
 3. Write channel CLAUDE.md to `projects/{domain}/channels/{channel}/CLAUDE.md`
@@ -206,7 +205,6 @@ TaskUpdate({ id: task_id, status: "completed" })
 - [ ] #general channel exists in DB and filesystem
 - [ ] All requested channels created in DB and filesystem
 - [ ] Each channel has a CLAUDE.md with mission and team section
-- [ ] Each channel has `output/posts.jsonl` initialized
 - [ ] Agent assignments registered in `channel_members` table
 - [ ] First agent per channel has `role = 'lead'`
 - [ ] System agents (xerus-master, xerus-cto) added to all channels

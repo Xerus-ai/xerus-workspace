@@ -30,7 +30,7 @@ If no channel path provided, runs standup for the current agent's channel.
 
 4. **Write Output**
    - Write standup to `.channel/state/standups/{YYYY-MM-DD}.md`
-   - Post summary to `output/posts.jsonl` with `message_type: "system"`
+   - Use `mcp__platform__send_notification` to share the standup summary
 
 ## Output Format
 
@@ -55,7 +55,7 @@ Participants: {list of agents}
 
 For workspace-wide standup (growth channel responsibility):
 1. Read all channel standup files from `.channel/state/standups/`
-2. Synthesize into the growth channel's `output/posts.jsonl` with `message_type: "system"`
+2. Synthesize and use `mcp__platform__send_notification` to share the workspace-wide summary in the growth channel
 
 ## Example
 

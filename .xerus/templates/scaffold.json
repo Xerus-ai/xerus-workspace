@@ -25,7 +25,6 @@
       ".channel/state/metrics"
     ],
     "init_files": [
-      {"path": "output/posts.jsonl", "content": ""},
       {"path": ".beads/issues.jsonl", "content": ""},
       {"path": ".beads/.gitattributes", "content": "issues.jsonl merge=beads\n"}
     ]

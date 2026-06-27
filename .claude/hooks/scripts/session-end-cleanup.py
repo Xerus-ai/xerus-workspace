@@ -207,14 +207,19 @@ def write_dashboard_data(agent_slug, workspace_root, today, now):
             # Take first 500 chars as summary
             context_summary = f.read()[:500]
 
-    # Count today's posts
-    posts_path = os.path.join(workspace_root, channel_rel, 'output', 'posts.jsonl')
+    # Count today's activity messages from workspace.db
     today_posts = 0
-    if os.path.exists(posts_path):
-        with open(posts_path, encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                if today in line:
-                    today_posts += 1
+    db_path = os.path.join(workspace_root, 'data', 'workspace.db')
+    if os.path.exists(db_path):
+        import subprocess
+        channel_slug = os.path.basename(channel_rel) if channel_rel else ''
+        sql = f"SELECT COUNT(*) FROM channel_messages WHERE channel_slug = '{channel_slug}' AND posted_at LIKE '{today}%';"
+        try:
+            result = subprocess.run(['sqlite3', db_path, sql], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0 and result.stdout.strip().isdigit():
+                today_posts = int(result.stdout.strip())
+        except (subprocess.TimeoutExpired, OSError):
+            pass
 
     # Count today's deliverables
     deliverables_dir = os.path.join(workspace_root, channel_rel, 'output', 'deliverables')

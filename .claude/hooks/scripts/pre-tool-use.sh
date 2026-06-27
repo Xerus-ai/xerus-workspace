@@ -190,16 +190,12 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
     if [[ "$RESOLVED_PATH" == "$RESOLVED_WS/projects/"* ]]; then
       # Writing to projects/ - must be in own channel or cross-channel output
       if [[ "$RESOLVED_PATH" != "$RESOLVED_CHANNEL/"* ]]; then
-        # Writing outside own channel
-        # Allow writing to other channels' output/posts.jsonl (cross-channel coordination)
-        if [[ "$RESOLVED_PATH" == */output/posts.jsonl ]]; then
-          : # Allowed: cross-channel coordination messages
-        else
-          echo "BLOCKED: Agent $AGENT_SLUG cannot write to other channels."
-          echo "Path: $FILE_PATH"
-          echo "Your channel: $CHANNEL_REL"
-          exit 1
-        fi
+        # Writing outside own channel — blocked. Use MCP tools for cross-channel communication.
+        echo "BLOCKED: Agent $AGENT_SLUG cannot write to other channels."
+        echo "Path: $FILE_PATH"
+        echo "Your channel: $CHANNEL_REL"
+        echo "Use mcp__platform__send_notification for cross-channel communication."
+        exit 1
       fi
     fi
   fi

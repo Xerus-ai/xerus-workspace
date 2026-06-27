@@ -157,8 +157,8 @@ CREATE TABLE IF NOT EXISTS channel_members (
 CREATE INDEX IF NOT EXISTS idx_channel_members_channel ON channel_members(channel_slug);
 CREATE INDEX IF NOT EXISTS idx_channel_members_agent ON channel_members(agent_slug);
 
--- Channel messages: backup/query store for posts.jsonl
--- Structured storage of channel messages for querying (mirrors posts.jsonl)
+-- Channel messages: primary store for channel activity
+-- Auto-populated by MCP mutation handlers (activity-logger.ts)
 CREATE TABLE IF NOT EXISTS channel_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     channel_slug TEXT NOT NULL,

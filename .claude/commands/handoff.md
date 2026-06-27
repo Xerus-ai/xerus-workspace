@@ -24,7 +24,7 @@ Hand off work to another agent in your channel.
    - Include: context, deliverables, tasks, notes
 
 4. **Notify Target**
-   - Write coordination message to channel output/posts.jsonl
+   - Use `mcp__platform__send_notification` to send the coordination message to the channel
    - Update target's inbox with handoff file reference
 
 5. **Update Own State**
@@ -59,7 +59,7 @@ handoff_notes: |
 ## Cross-Channel Handoffs
 
 For handoffs to another channel:
-1. Write coordination message to target channel's output/posts.jsonl
+1. Use `mcp__platform__send_notification` to send the coordination message to the target channel
 2. Include full context in the message body
 3. Update own STATUS.md with cross-channel handoff note
 

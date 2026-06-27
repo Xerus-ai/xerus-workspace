@@ -12,33 +12,33 @@ You are the lead agent for your channel. This skill defines your channel managem
 ## Channel Ownership
 
 You own the quality and output of your channel. Responsibilities:
-- Read `output/posts.jsonl` on wake to scan for unaddressed items
-- Distribute relevant coordination messages to teammates via `target_agent` metadata
+- Check channel activity on wake to scan for unaddressed items (query `channel_messages` in `data/workspace.db` via sqlite3 — reads only)
+- Distribute relevant coordination messages to teammates via `mcp__platform__send_notification` with `target_agent` metadata
 - Ensure channel goals (in channel CLAUDE.md) are on track
 - Aggregate team output quality and flag issues early
 
 ## Daily Protocol
 
 ### On Wake (channel manager duty)
-1. Read your channel's `output/posts.jsonl` from last session
+1. Read your channel's recent activity (query `channel_messages` in `data/workspace.db` via sqlite3 — reads only)
 2. Scan for:
    - Coordination messages from other channels addressed to your team
-   - Posts from teammates that need follow-up
+   - Messages from teammates that need follow-up
    - Unaddressed items or stale tasks
-3. Distribute relevant items to teammates:
-   ```json
-   {"agent_slug":"your-slug","content":"[Context from posts.jsonl]. Action needed: [specific ask]","message_type":"coordination","metadata":{"target_agent":"teammate-slug"},"posted_at":"..."}
-   ```
+3. Distribute relevant items to teammates via `mcp__platform__send_notification`:
+   - content: "[Context from channel activity]. Action needed: [specific ask]"
+   - message_type: "coordination"
+   - metadata: `{"target_agent":"teammate-slug"}`
 
 ### Task Distribution
 - Use beads (`bd create`) to assign work to teammates
 - Include clear acceptance criteria in task descriptions
-- Track teammate task completion via `output/posts.jsonl` updates
+- Track teammate task completion via `channel_messages` updates (query `data/workspace.db` via sqlite3 — reads only)
 - Reassign blocked tasks or escalate blockers
 
 ## Weekly Standup
 
-Write a channel summary to your channel's `output/posts.jsonl` weekly:
+Post a channel summary to your channel weekly via `mcp__platform__send_notification`:
 
 ```markdown
 # {Channel} Standup -- {date}
@@ -91,11 +91,11 @@ After each standup, write your channel metrics to `data/dashboard/{channel}.json
 When you receive a coordination message from another channel:
 1. Read the message context
 2. Determine which teammate(s) should act on it
-3. Write a coordination message to your channel's `output/posts.jsonl` with `target_agent` for the right teammate
+3. Send a coordination message via `mcp__platform__send_notification` with `target_agent` for the right teammate
 4. If it requires your direct action, handle it and post the result
 
 When you need something from another channel:
-1. Write to the target channel's `output/posts.jsonl`
+1. Use `mcp__platform__send_notification` targeting the other channel
 2. Set `message_type: "coordination"` and `metadata.target_agent` to their channel manager (lead agent)
 3. Be specific about what you need and by when
 
@@ -109,10 +109,10 @@ When you need something from another channel:
 
 ## Escalation
 
-Aggregate team blockers and escalate to xerus-master:
-```json
-{"agent_slug":"your-slug","content":"**Escalation**: [blocker summary]. Affected: [which teammates/tasks]. Need: [what would unblock].","message_type":"coordination","metadata":{"target_agent":"xerus-master"},"posted_at":"..."}
-```
+Aggregate team blockers and escalate to xerus-master via `mcp__platform__send_notification`:
+- content: "**Escalation**: [blocker summary]. Affected: [which teammates/tasks]. Need: [what would unblock]."
+- message_type: "coordination"
+- metadata: `{"target_agent":"xerus-master"}`
 
 ## Data Quality Responsibility
 

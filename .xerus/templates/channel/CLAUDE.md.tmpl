@@ -15,16 +15,14 @@
 | Metric 1 | TBD | TBD |
 
 ## Rules
-1. All work tracked in beads (`bd create`, `bd close`)
-2. Post updates to output/posts.jsonl
+1. Use MCP tools for tasks (`mcp__platform__create_task`)
+2. Use `mcp__platform__send_notification` for status updates
 3. Save deliverables to output/deliverables/
 
 ## Skills
 | Skill | Path | Use For |
 |-------|------|---------|
-| channel-orchestrator | .claude/skills/channel-orchestrator/SKILL.md | Standup, coordination |
 | data-steward | .claude/skills/data-steward/SKILL.md | Data persistence |
 
 ## Cross-Channel
-- Read from content-lab for ideas
-- Post coordination messages to target channels
+- Coordinate with other channels via MCP notifications

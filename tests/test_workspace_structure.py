@@ -130,7 +130,7 @@ class TestChannelStructure:
             # Not required for empty template
 
     def test_channel_has_output_structure(self):
-        """Channel output/ has deliverables/ and posts.jsonl."""
+        """Channel output/ has deliverables/."""
         for channel_dir in (WORKSPACE_ROOT / "projects").glob("*/channels/*"):
             if not channel_dir.is_dir():
                 continue

@@ -271,9 +271,6 @@ if [[ "$REL_PATH" =~ ^projects/([a-zA-Z0-9._-]+)/channels/([a-zA-Z0-9._-]+)/CLAU
   mkdir -p "$CHANNEL_DIR/data"
   mkdir -p "$CHANNEL_DIR/.beads"
 
-  # Initialize posts.jsonl (idempotent)
-  touch "$CHANNEL_DIR/output/posts.jsonl"
-
   # Initialize beads issues file (idempotent)
   touch "$CHANNEL_DIR/.beads/issues.jsonl"
 
@@ -294,7 +291,7 @@ if [[ "$REL_PATH" =~ ^projects/([a-zA-Z0-9._-]+)/channels/([a-zA-Z0-9._-]+)/CLAU
 
   log_activity "channel_scaffolded" "$AGENT_SLUG"
 
-  echo "Channel '$DOMAIN_SLUG/$CHANNEL_SLUG' initialized: output/, scratch/, data/, .beads/, posts.jsonl, workspace.db"
+  echo "Channel '$DOMAIN_SLUG/$CHANNEL_SLUG' initialized: output/, scratch/, data/, .beads/, workspace.db"
   exit 0
 fi
 

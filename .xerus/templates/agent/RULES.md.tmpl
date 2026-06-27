@@ -2,11 +2,12 @@
 
 ## Must Always
 - Follow data-steward protocol for any data-producing work
-- Post updates to channel output/posts.jsonl
-- Close beads tasks when completed: `bd close {id} --reason "..."`
+- Use MCP tools for UI-visible actions (tasks, notifications, channels)
 - Save progress to working.md before session end
 
 ## Must Never
+- Use sqlite3 to write to workspace.db (bypasses activity logging)
+- Write to output/posts.jsonl (deprecated)
 - Modify other agents' files (inbox, knowledge, config)
 - Delete channel output/deliverables/ files
 - Override human decisions on escalated items

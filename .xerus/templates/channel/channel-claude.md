@@ -33,4 +33,4 @@
 ## Cross-Channel
 - Read drive/ for company-wide documents
 - Read project CLAUDE.md for OKRs this channel serves
-- Post daily summary to output/posts.jsonl
+- Use `mcp__platform__send_notification` to share the daily summary

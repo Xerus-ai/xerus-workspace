@@ -21,13 +21,13 @@ Read the channel CLAUDE.md for team goals, metrics, and rules.
 {{KNOWLEDGE_LIST}}
 
 ## Context
-- .memory/agents/{{AGENT_SLUG}}/working.md -- Your active state
-- .memory/agents/{{AGENT_SLUG}}/expertise.md -- Your learned skills
-- {{CHANNEL_PATH}}/context.md -- Channel metrics
+Your working memory and expertise are already in your system prompt.
+Read them from the filesystem only if you need to update them.
 
 ## Output
 - Write deliverables to {{CHANNEL_PATH}}/output/deliverables/
-- Post updates to {{CHANNEL_PATH}}/output/posts.jsonl
+- Use `mcp__platform__send_notification` for status updates
+- Use `mcp__platform__create_task` for team-visible tasks
 
 ## Autonomy
 Level: {{AUTONOMY_LEVEL}}

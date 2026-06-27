@@ -22,43 +22,28 @@ def read_working_md(workspace: Path, agent_slug: str) -> str:
 
 
 def read_recent_posts(workspace: Path, agent_slug: str) -> list[str]:
-    """Read agent's recent posts from their channel."""
-    agent_config = workspace / "agents" / agent_slug / "config.json"
-    if not agent_config.exists():
+    """Read agent's recent activity from workspace.db channel_messages."""
+    import subprocess
+
+    db_path = workspace / "data" / "workspace.db"
+    if not db_path.exists():
         return []
 
+    sql = (
+        f"SELECT content FROM channel_messages "
+        f"WHERE agent_slug = '{agent_slug}' "
+        f"ORDER BY posted_at DESC LIMIT 5;"
+    )
     try:
-        with open(agent_config) as f:
-            config = json.load(f)
-    except (json.JSONDecodeError, OSError):
+        result = subprocess.run(
+            ["sqlite3", str(db_path), sql],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode != 0:
+            return []
+        return [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+    except (subprocess.TimeoutExpired, OSError):
         return []
-
-    domain = config.get("domain", "")
-    channel = config.get("primary_channel", "")
-    if not domain or not channel:
-        return []
-
-    posts_file = workspace / "projects" / domain / "channels" / channel / "output" / "posts.jsonl"
-    if not posts_file.exists():
-        return []
-
-    recent = []
-    try:
-        with open(posts_file) as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    post = json.loads(line)
-                    if post.get("agent_slug") == agent_slug:
-                        recent.append(post.get("content", ""))
-                except json.JSONDecodeError:
-                    continue
-    except OSError:
-        return []
-
-    return recent[-5:]
 
 
 def generate_handoff(agent_slug: str, working_content: str, recent_posts: list[str]) -> str:

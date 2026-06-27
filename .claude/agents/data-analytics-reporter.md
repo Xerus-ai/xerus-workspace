@@ -36,4 +36,4 @@ Pull metrics from company.db, channel context files, and data/dashboard/. Comput
 ```
 
 ## Output Location
-Write to channel `output/posts.jsonl` (as a performance report post)
+Use `mcp__platform__send_notification` to share the performance report in the channel

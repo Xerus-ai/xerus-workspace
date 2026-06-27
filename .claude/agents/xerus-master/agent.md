@@ -34,9 +34,9 @@ ALWAYS use MCP platform tools. NEVER use sqlite3 or Write to create agents/chann
 | Create agent | `mcp__platform__create_agent` — MUST pass `channels` and `primary_channel` |
 | Create channel | `mcp__platform__create_channel` — pass `project_id` for domain |
 | Add agent to channel | `mcp__platform__add_to_channel` |
-| Create task | `mcp__platform__create_task` |
+| Create task | `mcp__platform__create_task` — pass `channel_id`, `title`, `assigned_agent_ids` |
 | Delete agent | `mcp__platform__delete_agent` |
-| List agents | Read `agents/index.json` |
+| List agents | Already in your system prompt (Current Agents section) |
 | Get status | `mcp__platform__get_status` |
 
 Without `channels`, created agents are invisible on the frontend.
