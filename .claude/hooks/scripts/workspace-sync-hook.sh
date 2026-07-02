@@ -4,26 +4,20 @@
 #
 # Event: PostToolUse
 # Matcher: Write|Edit
+#
+# Hook input arrives as JSON on stdin, parsed by parse_hook_input in _lib.sh.
+# (There are NO CLAUDE_TOOL_NAME / CLAUDE_TOOL_INPUT_* env vars.)
 
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 QUEUE_FILE="$XERUS_WORKSPACE_ROOT/.claude/sync-queue.jsonl"
-TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 
 source "$(dirname "$0")/_lib.sh"
 audit "WorkspaceSyncHook"
+parse_hook_input
 
 case "$TOOL_NAME" in
   Write|Edit)
-    FILE_PATH=""
-    if command -v jq &>/dev/null; then
-      HOOK_INPUT=$(cat 2>/dev/null)
-      if [ -n "$HOOK_INPUT" ]; then
-        FILE_PATH=$(echo "$HOOK_INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
-      fi
-    fi
-    FILE_PATH="${FILE_PATH:-${CLAUDE_TOOL_FILE_PATH:-}}"
-
     if [ -z "$FILE_PATH" ]; then
       exit 0
     fi
@@ -64,3 +58,5 @@ case "$TOOL_NAME" in
     fi
     ;;
 esac
+
+exit 0

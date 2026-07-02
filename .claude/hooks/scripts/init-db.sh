@@ -143,3 +143,51 @@ migrate_file_metadata_tables() {
   sqlite3 "$WORKSPACE_DB_PATH" "CREATE INDEX IF NOT EXISTS idx_ft_file ON file_tags(file_path);" 2>/dev/null
 }
 migrate_file_metadata_tables
+
+# --- Task channel-slug normalization (always run, idempotent) ---
+# Legacy task rows (written before create_task normalized channel ids, or by
+# direct sqlite3 writes) stored a DOMAIN slug in tasks.project_slug.
+# channel_messages rows (task comments, activity events) have a foreign key on
+# channels(slug), so tasks with a non-channel project_slug can never receive
+# comments or activity. Remap them to a real channel; valid rows are untouched.
+# Each UPDATE only touches rows still invalid, in priority order:
+#   1. channel in the task's domain where the assigned agent is a member
+#   2. the domain's general channel ({domain}--general)
+#   3. the domain's oldest channel
+#   4. channel slug written without its domain prefix ({domain}--{project_slug})
+# Rows matching none of these are left alone (no channel exists to map to).
+migrate_task_channel_slugs() {
+  [ -f "$WORKSPACE_DB_PATH" ] || return 0
+
+  sqlite3 "$WORKSPACE_DB_PATH" "UPDATE tasks SET project_slug = COALESCE((
+      SELECT cm.channel_slug FROM channel_members cm
+        JOIN channels c ON c.slug = cm.channel_slug
+       WHERE cm.agent_slug = tasks.assigned_agent
+         AND c.domain_slug = tasks.project_slug
+       ORDER BY c.created_at, c.slug LIMIT 1
+    ), project_slug)
+    WHERE project_slug NOT IN (SELECT slug FROM channels);" 2>/dev/null
+
+  sqlite3 "$WORKSPACE_DB_PATH" "UPDATE tasks SET project_slug = COALESCE((
+      SELECT c.slug FROM channels c
+       WHERE c.domain_slug = tasks.project_slug
+         AND c.slug = tasks.project_slug || '--general'
+       LIMIT 1
+    ), project_slug)
+    WHERE project_slug NOT IN (SELECT slug FROM channels);" 2>/dev/null
+
+  sqlite3 "$WORKSPACE_DB_PATH" "UPDATE tasks SET project_slug = COALESCE((
+      SELECT c.slug FROM channels c
+       WHERE c.domain_slug = tasks.project_slug
+       ORDER BY c.created_at, c.slug LIMIT 1
+    ), project_slug)
+    WHERE project_slug NOT IN (SELECT slug FROM channels);" 2>/dev/null
+
+  sqlite3 "$WORKSPACE_DB_PATH" "UPDATE tasks SET project_slug = COALESCE((
+      SELECT c.slug FROM channels c
+       WHERE c.slug LIKE '%--' || tasks.project_slug
+       ORDER BY c.created_at, c.slug LIMIT 1
+    ), project_slug)
+    WHERE project_slug NOT IN (SELECT slug FROM channels);" 2>/dev/null
+}
+migrate_task_channel_slugs

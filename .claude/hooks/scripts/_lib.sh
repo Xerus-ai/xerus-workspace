@@ -14,6 +14,48 @@ fi
 PYTHON="${PYTHON:-$(command -v python3 2>/dev/null || command -v python 2>/dev/null || echo python3)}"
 export PYTHON
 
+# Parse Claude Code hook input from stdin JSON.
+#
+# Hook I/O contract (Claude Code):
+# - Input arrives as JSON on stdin: {tool_name, tool_input, tool_use_id, ...}
+#   (There are NO CLAUDE_TOOL_NAME / CLAUDE_TOOL_INPUT_* env vars.)
+# - Exit 2 BLOCKS a PreToolUse tool call and feeds stderr back to the model.
+#   Exit 0 allows the call. Exit 1 is a non-blocking error and does NOT block.
+# - PostToolUse hooks cannot block (the tool already ran).
+#
+# Sets globals: TOOL_NAME, TOOL_USE_ID, BASH_CMD, FILE_PATH, QUESTION, QUESTIONS
+# Safe on empty or malformed stdin: defaults stay in place.
+parse_hook_input() {
+    TOOL_NAME="unknown"
+    TOOL_USE_ID=""
+    BASH_CMD=""
+    FILE_PATH=""
+    QUESTION=""
+    QUESTIONS="null"
+    local hook_input
+    hook_input=$(cat 2>/dev/null || true)
+    if [ -n "$hook_input" ]; then
+        eval "$(printf '%s' "$hook_input" | $PYTHON -c "
+import json, sys, shlex
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+ti = d.get('tool_input') or {}
+def emit(k, v):
+    print(k + '=' + shlex.quote('' if v is None else str(v)))
+emit('TOOL_NAME', d.get('tool_name') or 'unknown')
+emit('TOOL_USE_ID', d.get('tool_use_id') or '')
+emit('BASH_CMD', ti.get('command') or '')
+emit('FILE_PATH', ti.get('file_path') or '')
+emit('QUESTION', ti.get('question') or '')
+qs = ti.get('questions')
+emit('QUESTIONS', json.dumps(qs) if qs is not None else 'null')
+" 2>/dev/null || true)"
+    fi
+    return 0
+}
+
 # Ensure audit directory exists (idempotent)
 mkdir -p "$XERUS_WORKSPACE_ROOT/.xerus" 2>/dev/null
 

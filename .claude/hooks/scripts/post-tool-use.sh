@@ -1,31 +1,22 @@
 #!/bin/bash
-# PostToolUse hook: Trigger metadata_sync for file writes, update billing
-# Runs after each tool execution
+# PostToolUse hook: Log file_write events to activity.jsonl for metadata sync
+# Runs after each tool execution.
 #
-# SDK hook input is passed as JSON on stdin. CLAUDE_TOOL_NAME is set by the runner.
-# File path extraction: the SDK passes tool_input as part of the hook JSON payload.
-# We parse it from stdin if available, falling back to env var.
+# Hook I/O contract (Claude Code):
+# - Input arrives as JSON on stdin: {tool_name, tool_input, tool_response, ...}
+#   (There are NO CLAUDE_TOOL_NAME / CLAUDE_TOOL_INPUT_* env vars.)
+# - PostToolUse cannot block — the tool already ran. Always exit 0.
 
-TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"
 audit "PostToolUse"
+parse_hook_input
 
-# If tool was Write/Edit, trigger metadata sync for known paths
+# If tool was Write/Edit, log a file_write event for metadata sync
 case "$TOOL_NAME" in
   Write|Edit)
-    # Try to extract file_path from hook JSON input (stdin), fallback to env var
-    FILE_PATH=""
-    if command -v jq &>/dev/null; then
-      HOOK_INPUT=$(cat 2>/dev/null)
-      if [ -n "$HOOK_INPUT" ]; then
-        FILE_PATH=$(echo "$HOOK_INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
-      fi
-    fi
-    FILE_PATH="${FILE_PATH:-${CLAUDE_TOOL_FILE_PATH:-}}"
-
     if [ -n "$FILE_PATH" ]; then
       TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
       if command -v jq &>/dev/null; then
@@ -38,3 +29,5 @@ case "$TOOL_NAME" in
     fi
     ;;
 esac
+
+exit 0

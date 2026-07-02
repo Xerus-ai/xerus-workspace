@@ -1,13 +1,22 @@
 #!/bin/bash
-# PreToolUse hook: HITL authorization, bd-close validation
-# Runs before each tool execution
+# PreToolUse hook: HITL authorization, bd-close validation, workspace.db write guard
+# Runs before each tool execution.
+#
+# Hook I/O contract (Claude Code):
+# - Input arrives as JSON on stdin: {tool_name, tool_input, tool_use_id, ...}
+#   (There are NO CLAUDE_TOOL_NAME / CLAUDE_TOOL_INPUT_* env vars.)
+# - Exit 2 BLOCKS the tool call and feeds stderr back to the model.
+# - Exit 0 allows the call. Exit 1 is a non-blocking error and does NOT block.
 
-TOOL_NAME="${CLAUDE_TOOL_NAME:-unknown}"
 AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"
 audit "PreToolUse"
+
+# --- Parse hook input from stdin JSON (shared parser in _lib.sh) ---
+# Sets TOOL_NAME, TOOL_USE_ID, BASH_CMD, FILE_PATH, QUESTION, QUESTIONS
+parse_hook_input
 
 # Resolve agent paths using new channel-scoped structure
 AGENT_DIR=$(resolve_agent_dir "$AGENT_SLUG")
@@ -17,20 +26,20 @@ if [ -n "$CHANNEL_REL" ]; then
   CHANNEL_DIR="$XERUS_WORKSPACE_ROOT/$CHANNEL_REL"
 fi
 
-# --- AskUserQuestion HITL Bridge ---
+# --- AskUserQuestion HITL Bridge (opt-in via flag file) ---
 # Claude Code's built-in AskUserQuestion auto-resolves in headless mode.
 # Intercept it here: emit the question as an hitl_request event, then
 # block until the user responds via the frontend guidance UI.
-if [ "$TOOL_NAME" = "AskUserQuestion" ]; then
-  TOOL_USE_ID="${CLAUDE_TOOL_USE_ID:-auq-$(date +%s)}"
+# GATED: the bridge blocks until the backend writes a response file, and the
+# backend side of that flow is not implemented yet. Without the gate every
+# AskUserQuestion call would hang for the full timeout. Enable by creating
+# .xerus/hitl-bridge-enabled once the backend responder ships.
+if [ "$TOOL_NAME" = "AskUserQuestion" ] && [ -f "$XERUS_WORKSPACE_ROOT/.xerus/hitl-bridge-enabled" ]; then
+  TOOL_USE_ID="${TOOL_USE_ID:-auq-$(date +%s)}"
   HITL_DIR="/tmp/xerus-hitl"
   mkdir -p "$HITL_DIR"
   PENDING_FILE="$HITL_DIR/${TOOL_USE_ID}.pending"
   RESPONSE_FILE="$HITL_DIR/${TOOL_USE_ID}.response"
-
-  # Extract question data from tool input env vars
-  QUESTIONS="${CLAUDE_TOOL_INPUT_questions:-}"
-  QUESTION="${CLAUDE_TOOL_INPUT_question:-}"
 
   # Write pending file with question data for the backend to read
   printf '{"tool_use_id":"%s","agent_slug":"%s","questions":%s,"question":"%s","timestamp":"%s"}\n' \
@@ -62,35 +71,33 @@ if [ "$TOOL_NAME" = "AskUserQuestion" ]; then
   else
     # Timeout — deny the tool to prevent the agent from continuing without input
     rm -f "$PENDING_FILE"
-    echo "AskUserQuestion timed out waiting for user response."
-    exit 1
+    echo "AskUserQuestion timed out waiting for user response." >&2
+    exit 2
   fi
 fi
 
 # --- HITL Check 1: Agent pause state ---
 PAUSE_FILE="$AGENT_DIR/.paused"
 if [ -f "$PAUSE_FILE" ]; then
-  echo "Agent $AGENT_SLUG is paused. Tool $TOOL_NAME blocked."
-  exit 1
+  echo "Agent $AGENT_SLUG is paused. Tool $TOOL_NAME blocked." >&2
+  exit 2
 fi
 
 # --- HITL Check 2: Tool authorization required ---
 HITL_RULES_FILE="$AGENT_DIR/.hitl_required"
 if [ -f "$HITL_RULES_FILE" ]; then
   if grep -qxF "$TOOL_NAME" "$HITL_RULES_FILE" 2>/dev/null; then
-    TOOL_USE_ID="${CLAUDE_TOOL_USE_ID:-}"
     # Validate TOOL_USE_ID format (prevent path traversal)
     if [ -n "$TOOL_USE_ID" ] && ! validate_safe_id "$TOOL_USE_ID"; then
-      echo "ERROR: Invalid TOOL_USE_ID format"
-      exit 1
+      echo "ERROR: Invalid TOOL_USE_ID format" >&2
+      exit 2
     fi
     if [ -z "$TOOL_USE_ID" ]; then
-      echo "ERROR: Tool $TOOL_NAME requires HITL but SDK provided no TOOL_USE_ID."
-      exit 1
+      echo "ERROR: Tool $TOOL_NAME requires HITL but no TOOL_USE_ID was provided." >&2
+      exit 2
     fi
     APPROVED_FILE="$AGENT_DIR/.hitl_approved/$TOOL_USE_ID"
     if [ ! -f "$APPROVED_FILE" ]; then
-      echo "Tool $TOOL_NAME requires user authorization (HITL)."
       mkdir -p "$AGENT_DIR/.hitl_pending"
       local_ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
       # Write atomically via temp file
@@ -100,24 +107,45 @@ if [ -f "$HITL_RULES_FILE" ]; then
       if [ "$TMPFILE" != "$AGENT_DIR/.hitl_pending/$TOOL_USE_ID.json" ]; then
         mv "$TMPFILE" "$AGENT_DIR/.hitl_pending/$TOOL_USE_ID.json"
       fi
-      exit 1
+      echo "Tool $TOOL_NAME requires user authorization (HITL)." >&2
+      exit 2
     fi
   fi
 fi
 
-# --- Check 3: bd close deliverable validation ---
-# Before allowing `bd close`, verify acceptance criteria are met
+# --- Bash command checks ---
 if [ "$TOOL_NAME" = "Bash" ]; then
-  BASH_CMD="${CLAUDE_TOOL_INPUT_command:-}"
 
+  # --- Check 3: workspace.db write protection ---
+  # workspace.db is platform-owned operational state (tasks, channels, inbox).
+  # Direct SQL writes bypass channel_slug normalization, comment metadata,
+  # activity logging, and SSE — mutations MUST go through mcp__platform__*
+  # tools. Read-only access (SELECT) remains allowed.
+  if printf '%s' "$BASH_CMD" | grep -q 'workspace\.db' \
+     && printf '%s' "$BASH_CMD" | grep -qiE '\b(INSERT|UPDATE|DELETE|REPLACE|DROP|ALTER|CREATE)\b'; then
+    {
+      echo "BLOCKED: Direct writes to workspace.db are not allowed."
+      echo "workspace.db is platform-owned operational state (tasks, channels, inbox)."
+      echo "Use MCP platform tools instead:"
+      echo "  create task    -> mcp__platform__create_task"
+      echo "  update task    -> mcp__platform__update_task (status, comment, attachments)"
+      echo "  create channel -> mcp__platform__create_channel"
+      echo "  notify user    -> mcp__platform__send_notification"
+      echo "Read-only SELECT queries on workspace.db remain allowed."
+    } >&2
+    exit 2
+  fi
+
+  # --- Check 4: bd close deliverable validation ---
+  # Before allowing `bd close`, verify acceptance criteria are met
   if echo "$BASH_CMD" | grep -qE '\bbd\s+close\s+'; then
     TASK_ID=$(echo "$BASH_CMD" | grep -oE 'bd\s+close\s+([^ ";&|]+)' | head -1 | awk '{print $3}')
 
     if [ -n "$TASK_ID" ] && validate_safe_id "$TASK_ID"; then
       # CHANNEL_DIR already resolved at start of hook
       if [ -n "$CHANNEL_DIR" ] && ! validate_workspace_path "$CHANNEL_DIR"; then
-        echo "ERROR: Channel path escapes workspace boundary"
-        exit 1
+        echo "ERROR: Channel path escapes workspace boundary" >&2
+        exit 2
       fi
 
       # Get acceptance criteria from bd show
@@ -142,14 +170,16 @@ except (json.JSONDecodeError, KeyError, TypeError, IndexError):
             FULL_PATH="$CHANNEL_DIR/$DELIVERABLE"
 
             if ! validate_workspace_path "$FULL_PATH"; then
-              echo "ERROR: Deliverable path escapes workspace boundary"
-              exit 1
+              echo "ERROR: Deliverable path escapes workspace boundary" >&2
+              exit 2
             fi
 
             if [ ! -f "$FULL_PATH" ]; then
-              echo "BLOCKED: Cannot close task $TASK_ID. Deliverable not found: $DELIVERABLE"
-              echo "Create the deliverable first, then close the task."
-              exit 1
+              {
+                echo "BLOCKED: Cannot close task $TASK_ID. Deliverable not found: $DELIVERABLE"
+                echo "Create the deliverable first, then close the task."
+              } >&2
+              exit 2
             fi
 
             # Check minimum size if specified
@@ -157,8 +187,8 @@ except (json.JSONDecodeError, KeyError, TypeError, IndexError):
             if [ -n "$MIN_BYTES" ]; then
               ACTUAL_SIZE=$(wc -c < "$FULL_PATH" 2>/dev/null || echo 0)
               if [ "$ACTUAL_SIZE" -lt "$MIN_BYTES" ]; then
-                echo "BLOCKED: Deliverable $DELIVERABLE is $ACTUAL_SIZE bytes (minimum: $MIN_BYTES)."
-                exit 1
+                echo "BLOCKED: Deliverable $DELIVERABLE is $ACTUAL_SIZE bytes (minimum: $MIN_BYTES)." >&2
+                exit 2
               fi
             fi
           fi
@@ -168,12 +198,10 @@ except (json.JSONDecodeError, KeyError, TypeError, IndexError):
   fi
 fi
 
-# --- Check 4: Channel boundary enforcement for file writes ---
+# --- Check 5: Channel boundary enforcement for file writes ---
 # Agents can only write to their channel's directories (scratch/, output/, .memory/)
 # or workspace locations (drive/, data/, .memory/entities/)
 if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
-  FILE_PATH="${CLAUDE_TOOL_INPUT_file_path:-}"
-
   if [ -n "$FILE_PATH" ] && [ -n "$CHANNEL_DIR" ]; then
     # Resolve the file path
     RESOLVED_PATH=$(realpath -m "$FILE_PATH" 2>/dev/null || echo "$FILE_PATH")
@@ -182,8 +210,8 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
 
     # Must be within workspace
     if ! validate_workspace_path "$FILE_PATH"; then
-      echo "ERROR: File path escapes workspace boundary"
-      exit 1
+      echo "ERROR: File path escapes workspace boundary" >&2
+      exit 2
     fi
 
     # Check if writing to another channel
@@ -191,11 +219,13 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
       # Writing to projects/ - must be in own channel or cross-channel output
       if [[ "$RESOLVED_PATH" != "$RESOLVED_CHANNEL/"* ]]; then
         # Writing outside own channel — blocked. Use MCP tools for cross-channel communication.
-        echo "BLOCKED: Agent $AGENT_SLUG cannot write to other channels."
-        echo "Path: $FILE_PATH"
-        echo "Your channel: $CHANNEL_REL"
-        echo "Use mcp__platform__send_notification for cross-channel communication."
-        exit 1
+        {
+          echo "BLOCKED: Agent $AGENT_SLUG cannot write to other channels."
+          echo "Path: $FILE_PATH"
+          echo "Your channel: $CHANNEL_REL"
+          echo "Use mcp__platform__send_notification for cross-channel communication."
+        } >&2
+        exit 2
       fi
     fi
   fi
