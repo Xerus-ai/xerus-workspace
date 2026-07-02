@@ -1,7 +1,7 @@
 #!/bin/bash
 # SubagentStop hook: Log subagent completion, save any partial state
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"

@@ -3,7 +3,7 @@
 # The agent loses most conversation context after compaction.
 # working.md is on disk -- it survives. The agent re-reads it to resume.
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"

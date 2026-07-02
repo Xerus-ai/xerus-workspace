@@ -2,7 +2,7 @@
 # SessionStart hook: Initialize workspace, inject task context
 # Runs when a new agent session begins
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"
@@ -17,6 +17,17 @@ mkdir -p "$MEMORY_DIR"
 
 # Initialize company.db + workspace.db if needed
 "$(dirname "$0")/init-db.sh"
+
+# One-time historical cleanup: purge legacy "unknown"/empty-agent rows from the
+# activity + audit feeds (the pre-fix heartbeat-daemon launched the CLI without
+# XERUS_AGENT_SLUG). Marker-guarded so it runs once per workspace, not per
+# session; if cleanup fails the marker is not set, so it retries next session.
+CLEAN_MARKER="$XERUS_WORKSPACE_ROOT/.xerus/.activity-identity-cleaned"
+if [ ! -f "$CLEAN_MARKER" ]; then
+  if "$(dirname "$0")/cleanup-activity-identity.sh" "$XERUS_WORKSPACE_ROOT" >/dev/null; then
+    touch "$CLEAN_MARKER"
+  fi
+fi
 
 # Ensure Python packages are installed (mcp for IPC server, pyyaml for shift.yaml parsing)
 if ! python3 -c "import mcp" 2>/dev/null || ! python3 -c "import yaml" 2>/dev/null; then

@@ -10,7 +10,7 @@
 
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 QUEUE_FILE="$XERUS_WORKSPACE_ROOT/.claude/sync-queue.jsonl"
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 
 source "$(dirname "$0")/_lib.sh"
 audit "WorkspaceSyncHook"
@@ -43,6 +43,8 @@ case "$TOOL_NAME" in
     esac
 
     if [ -n "$SYNC_TYPE" ]; then
+      # Fail-fast: never attribute a sync-queue entry to a missing/"unknown" agent.
+      AGENT_SLUG=$(resolve_activity_agent "$SYNC_TYPE") || exit 0
       TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
       if command -v jq &>/dev/null; then
         jq -n \

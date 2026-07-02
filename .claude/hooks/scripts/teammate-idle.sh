@@ -2,7 +2,7 @@
 # TeammateIdle hook: Notify channel lead when teammate has no work
 # The lead can reassign tasks or create ad-hoc work.
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 TEAMMATE_ID="${CLAUDE_TEAMMATE_ID:-unknown}"
 TEAMMATE_NAME="${CLAUDE_TEAMMATE_NAME:-unknown}"

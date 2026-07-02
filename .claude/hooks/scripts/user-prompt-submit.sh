@@ -3,7 +3,7 @@
 # Runs before the agent processes a user prompt or heartbeat trigger.
 # Prepares a warm start: matched skills, previous session state, inbox messages.
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"

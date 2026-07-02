@@ -2,7 +2,7 @@
 # SessionEnd hook: Summary, memory commit, housekeeping, dashboard
 # Runs when agent session ends normally
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 MEMORY_ROOT="$XERUS_WORKSPACE_ROOT/.memory"
 
@@ -23,19 +23,13 @@ if [ -n "$AGENT_DIR" ] && [ -f "$AGENT_DIR/.channel-path" ]; then
   fi
 fi
 
-# Git commit all memory changes
+# Git commit all memory changes (source of truth for .memory/).
+# The backend indexes these files into pgvector after the session completes
+# (see runPostSessionMemoryIndexing in runner-event-router.ts), so no separate
+# indexing hand-off is written here.
 cd "$MEMORY_ROOT" 2>/dev/null && {
   git add -A 2>/dev/null
   git diff --cached --quiet 2>/dev/null || git commit -m "session-end: $AGENT_SLUG" 2>/dev/null
-}
-
-# Trigger memory indexing for changed files after commit
-cd "$MEMORY_ROOT" 2>/dev/null && {
-  CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
-  if [ -n "$CHANGED" ]; then
-    mkdir -p "$XERUS_WORKSPACE_ROOT/.xerus/state"
-    echo "$CHANGED" > "$XERUS_WORKSPACE_ROOT/.xerus/state/pending-index.txt"
-  fi
 }
 
 # Run data integrity check

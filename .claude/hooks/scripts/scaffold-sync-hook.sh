@@ -12,7 +12,7 @@
 # Matcher: Write|Edit
 
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 
 source "$(dirname "$0")/_lib.sh"
 

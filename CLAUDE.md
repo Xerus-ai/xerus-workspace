@@ -32,8 +32,17 @@ data/company.db                         Business data (research, prospects — S
 data/workspace.db                       Operational data (DO NOT write directly — use MCP tools)
 marketplace/                            Read-only skill/agent catalog
 scratch/                                Disposable work files
-output/deliverables/                    Final deliverables (persistent)
+output/deliverables/                    Final deliverables (persistent) — see "Deliverables" below
 ```
+
+## Deliverables
+
+Save finished work where it will surface in the Drive UI:
+
+- **Preferred:** `projects/{domain}/channels/{channel}/output/deliverables/` — keeps deliverables organized per channel and attributed to your team. Shown in Drive under the project (and channel) display name.
+- **Also works:** top-level `output/deliverables/` — for non-channel work. Shown in Drive under a `Deliverables` folder.
+
+Both locations are persistent and are surfaced by the Drive readers; prefer the per-channel path when you are working inside a channel.
 
 ## Data Rules
 

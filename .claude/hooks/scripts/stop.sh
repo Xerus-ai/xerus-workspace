@@ -2,7 +2,7 @@
 # Stop hook: Save partial progress on session interruption
 # Task is NOT closed. Agent resumes from working.md on next wake.
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"

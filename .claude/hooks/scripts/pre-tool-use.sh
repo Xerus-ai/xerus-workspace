@@ -8,7 +8,7 @@
 # - Exit 2 BLOCKS the tool call and feeds stderr back to the model.
 # - Exit 0 allows the call. Exit 1 is a non-blocking error and does NOT block.
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
 source "$(dirname "$0")/_lib.sh"

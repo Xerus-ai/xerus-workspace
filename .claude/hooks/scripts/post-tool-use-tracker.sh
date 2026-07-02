@@ -8,7 +8,7 @@
 # (There are NO CLAUDE_TOOL_NAME / CLAUDE_TOOL_INPUT_* env vars.)
 
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 
 source "$(dirname "$0")/_lib.sh"
 parse_hook_input

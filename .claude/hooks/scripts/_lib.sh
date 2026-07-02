@@ -3,10 +3,13 @@
 
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 
-# Validate AGENT_SLUG before it's used in any path construction
-XERUS_AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
-if [[ ! "$XERUS_AGENT_SLUG" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-  echo "ERROR: Invalid XERUS_AGENT_SLUG: $XERUS_AGENT_SLUG" >&2
+# Agent identity comes ONLY from XERUS_AGENT_SLUG, injected by the backend CLI
+# launch path (daytona-runner.ts buildSessionCommand). There is deliberately NO
+# "unknown" fallback: a missing value is a launch-path bug that must surface
+# loudly (see resolve_activity_agent) instead of silently mislabelling activity.
+# Validate the format up front when present so path construction stays safe.
+if [ -n "${XERUS_AGENT_SLUG:-}" ] && [[ ! "$XERUS_AGENT_SLUG" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+  echo "ERROR [xerus-hook]: Invalid XERUS_AGENT_SLUG: '$XERUS_AGENT_SLUG'" >&2
   exit 1
 fi
 
@@ -59,11 +62,44 @@ emit('QUESTIONS', json.dumps(qs) if qs is not None else 'null')
 # Ensure audit directory exists (idempotent)
 mkdir -p "$XERUS_WORKSPACE_ROOT/.xerus" 2>/dev/null
 
+# Resolve the agent identity for an activity/audit write. Fail-fast: identity
+# comes ONLY from XERUS_AGENT_SLUG (injected by the backend CLI launch path in
+# daytona-runner.ts buildSessionCommand). There is deliberately NO "unknown"
+# fallback -- a missing value means a launch path spawned the CLI without the
+# env var, and we refuse to pollute the activity feed with a bogus agent.
+#
+# Args:
+#   $1 - context label used in the error message (hook name or event name)
+#   $2 - optional explicit slug (e.g. "system" for non-agent events); when
+#        empty the XERUS_AGENT_SLUG env var is used.
+# On success: prints the validated slug to stdout, returns 0.
+# On failure: prints nothing to stdout, emits a loud error to stderr, returns 1.
+resolve_activity_agent() {
+    local context="$1"
+    local slug="${2:-${XERUS_AGENT_SLUG:-}}"
+    if [ -z "$slug" ]; then
+        {
+            echo "ERROR [xerus-hook]: refusing to write activity ('$context') without an agent identity."
+            echo "  XERUS_AGENT_SLUG is unset/empty: the CLI launch path that spawned this"
+            echo "  session did not inject it. Fix the launcher (the backend injects it in"
+            echo "  daytona-runner.ts buildSessionCommand); do NOT fall back to 'unknown'."
+        } >&2
+        return 1
+    fi
+    if [[ ! "$slug" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+        echo "ERROR [xerus-hook]: refusing to write activity ('$context'): invalid agent slug '$slug'." >&2
+        return 1
+    fi
+    printf '%s' "$slug"
+}
+
 # Emit a structured audit trail entry to hook-audit.jsonl
 # Usage: audit "HookName"
+# Fail-fast: refuses to write (and returns non-zero) if no valid agent identity.
 audit() {
     local hook_name="$1"
-    local agent="${XERUS_AGENT_SLUG:-unknown}"
+    local agent
+    agent=$(resolve_activity_agent "$hook_name") || return 1
     # Use printf for timestamp to avoid forking date subprocess
     local ts
     if printf -v ts '%(%Y-%m-%dT%H:%M:%SZ)T' -1 2>/dev/null; then
@@ -76,10 +112,12 @@ audit() {
 }
 
 # Log an activity event to data/activity.jsonl
-# Usage: log_activity "event_name" "agent_slug"
+# Usage: log_activity "event_name" ["agent_slug"]
+# Fail-fast: refuses to write (and returns non-zero) if no valid agent identity.
 log_activity() {
     local event="$1"
-    local agent="${2:-${XERUS_AGENT_SLUG:-unknown}}"
+    local agent
+    agent=$(resolve_activity_agent "$event" "$2") || return 1
     local ts
     if printf -v ts '%(%Y-%m-%dT%H:%M:%SZ)T' -1 2>/dev/null; then
         :

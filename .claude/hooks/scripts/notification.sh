@@ -2,7 +2,7 @@
 # Notification hook: Route notifications to inbox
 # Runs when SDK sends a notification
 
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
 NOTIFICATION="${CLAUDE_NOTIFICATION:-}"
 

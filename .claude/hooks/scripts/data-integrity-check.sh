@@ -2,7 +2,7 @@
 # SessionEnd data integrity check — warns about orphaned scratch files
 # Non-blocking: logs warnings but never fails
 XERUS_WORKSPACE_ROOT="${XERUS_WORKSPACE_ROOT:?XERUS_WORKSPACE_ROOT must be set}"
-AGENT_SLUG="${XERUS_AGENT_SLUG:-unknown}"
+AGENT_SLUG="${XERUS_AGENT_SLUG:-}"
 DB_PATH="$XERUS_WORKSPACE_ROOT/data/company.db"
 
 source "$(dirname "$0")/_lib.sh"
