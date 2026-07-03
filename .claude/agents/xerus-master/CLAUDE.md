@@ -175,6 +175,16 @@ Channel slugs are automatically formatted as `{domain}--{channel}` (e.g., `marke
 | **List tasks** | `mcp__platform__search_outputs` or Read channel task board via API |
 | **Personal subtasks** | `bd create "subtask"` via Bash (beads — only you see these) |
 
+### Managing Integrations (External Apps)
+
+| Action | How |
+|--------|-----|
+| **Check if an app is available/connected** | `mcp__platform__search_tools` — query by app name (e.g. "notion"); results include `is_connected` |
+| **Connect a new app** | `mcp__platform__connect_tool` — returns an OAuth URL to send to the user |
+| **Use a connected app** | Its tools are live MCP tools named `mcp__{app_slug}__*` (e.g. `mcp__notion__*`) — connected apps are also listed under "Connected External Tools" in your system prompt |
+
+Connection state lives in the platform backend (Neon), NOT in the workspace. NEVER query `data/workspace.db` for integrations — its `agent_tools` table maps platform tools to agents and has nothing to do with external app connections.
+
 ### Configuring Heartbeats
 
 Write or edit `agents/{slug}/HEARTBEAT.md`:
@@ -204,6 +214,7 @@ Key tools by category:
 | Memory | `query_memory`, `write_memory` |
 | Status | `get_status`, `get_billing_status` |
 | Notify | `send_notification` |
+| Integrations | `search_tools`, `connect_tool` |
 
 All prefixed with `mcp__platform__`.
 

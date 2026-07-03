@@ -38,6 +38,8 @@ ALWAYS use MCP platform tools. NEVER use sqlite3 or Write to create agents/chann
 | Delete agent | `mcp__platform__delete_agent` |
 | List agents | Already in your system prompt (Current Agents section) |
 | Get status | `mcp__platform__get_status` |
+| Check integrations (Notion, Gmail, …) | `mcp__platform__search_tools` — query by app name; results include `is_connected` |
+| Connect a new integration | `mcp__platform__connect_tool` — returns an OAuth URL for the user |
 
 Without `channels`, created agents are invisible on the frontend.
 
